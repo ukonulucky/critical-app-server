@@ -12,9 +12,9 @@ const userSchema = new mongoose.Schema<userSchemaInterface>(
             type: String, required: true
         },
     email: { type: String, required: true },
-        password: { type: String, required: true },
-        phone: {
-            type: String, required: true
+    password: { type: String, required: true },
+    phone: {
+            type: String, default: null
         },
         isPhoneVerified: {
             type: Boolean,

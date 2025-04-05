@@ -28,17 +28,23 @@ export interface userSchemaInterface extends Document {
 
 export interface mailSenderType { 
     subject: string
-    to: string
+    to: {
+        email: string,
+        name: string
+    }[]
     emailTemplate: string
-    mailName: string
+    senderName: string
 }
 
 
 export interface registerType  {
     fullName: string;
     password: string;
-    phone: string,
     email: string;
-    deviceType: string
     role?: string
+}
+
+export interface registerAccount { 
+    phone: string,
+    deviceType: string
 }

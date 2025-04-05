@@ -6,13 +6,13 @@ const sendBrevoEmail = async function (options: mailSenderType) {
 
 
     const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
-     const { subject,to, emailTemplate, mailName} = options; 
+     const { subject,to, emailTemplate, senderName} = options; 
   
 
     try {
 
       const data = {
-        sender: { email: 'ukonulucky@gmail.com', name: mailName }, // { email: 'sender@example.com', name: 'Sender Name' }
+        sender: { email: 'ukonulucky@gmail.com', name: senderName }, // { email: 'sender@example.com', name: 'Sender Name' }
         to:to, // [{ email: 'recipient@example.com', name: 'Recipient Name' }]
         subject: subject,
         htmlContent: emailTemplate,
@@ -40,4 +40,4 @@ const sendBrevoEmail = async function (options: mailSenderType) {
     }
 }
   
-module.exports = sendBrevoEmail
+export default sendBrevoEmail

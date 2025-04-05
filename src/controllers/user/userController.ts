@@ -1,5 +1,4 @@
 import expressAsyncHandler from "express-async-handler"
-import bcrypt from "bcryptjs"
 import jwt, { JwtPayload} from "jsonwebtoken"
 import { NextFunction, Request, Response } from "express"
 
@@ -7,23 +6,21 @@ import { NextFunction, Request, Response } from "express"
 import isValidObjectId from "../../helpers/mongooseIdValidity";
 import UserModel from "../../models/user";
 import { registerType } from "../../appTypes/types";
+import sendBrevoEmail from "../../helpers/mailsSender";
 
 
-
-const sendBrevoEmail = require("../../utils/services/mailSender");
 
 // register user controller
 const userRegisterController = expressAsyncHandler(async (req: Request<{}, {}, registerType>, res:Response ): Promise<void> => {
-    const { deviceType,
+    const { 
         email,
         fullName,
         password,
-        phone,
         role
    } = req.body;
 
   // check if email and password are sent
-  if (!email || !password || !fullName || !deviceType || !phone) {
+  if (!email || !password || !fullName ) {
     throw new Error("Missing credentials");
   }
 
@@ -39,13 +36,15 @@ const userRegisterController = expressAsyncHandler(async (req: Request<{}, {}, r
     password,
     email,
     fullName,
-      role,
-    phone
+      role
   });
 
   const { email: createdEmail } = registeredUser;
   /* endpoint to verify email */
+
+  /* generate  token */
   const emailVerificationToken = registeredUser.createEmailVerificationToken();
+  
   const verifyEmailEndpoint =
     process.env.SERVER_URL +
     "/api/v1/user" +
@@ -55,9 +54,7 @@ const userRegisterController = expressAsyncHandler(async (req: Request<{}, {}, r
     emailVerificationToken;
   const message =
     "Please click here " + verifyEmailEndpoint + " to verify your email";
-  /* 
-       const { subject,to, emailTemplate} = options; 
-    */
+ 
 
   await registeredUser.save();
   /* send email for verification */
@@ -72,13 +69,12 @@ const userRegisterController = expressAsyncHandler(async (req: Request<{}, {}, r
         name: fullName,
       },
     ],
+    senderName:"online bank assessment"
   };
 
   sendBrevoEmail(option);
 
-  /* 
-mailSender(message,createdEmail,"Registration")
- */
+ 
 
    res.status(201).json({
     status: "success",
@@ -95,7 +91,7 @@ const verifyEmailController = expressAsyncHandler(async (req: Request<{
     token: string
 }>, res): Promise<void> => {
   const { email, token } = req.params;
-  console.log(req.params);
+ 
 
   if (!token || !email) {
     throw new Error("Missing credentials");
@@ -163,6 +159,7 @@ const userLoginController = expressAsyncHandler(async (req: Request<{}, {}, {
           name: fullName,
         },
       ],
+      senderName:"online bank assessment"
     };
 
     sendBrevoEmail(option);
@@ -312,6 +309,7 @@ res.status(401).json({
         name: fullName,
       },
     ],
+    senderName:"online bank assessment"
   };
 
   sendBrevoEmail(option);
@@ -364,6 +362,7 @@ const changePasswordController = expressAsyncHandler(async (req, res): Promise<v
         name: fullName,
       },
     ],
+    senderName:"online bank assessment"
   };
 
   sendBrevoEmail(option);
