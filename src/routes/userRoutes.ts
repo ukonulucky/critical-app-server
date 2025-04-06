@@ -1,22 +1,32 @@
-const express = require('express');
-const { userRegisterController, userLoginController, logOutUserController, userAuthticateController, getAllUsersController, getSingleUserController, verifyEmailController, forgotPasswordController, changePasswordController } = require('../../controllers/user/userController');
+import { changePasswordController, deleteUserController, forgotPasswordController, getAllUsersController, getSingleUserController, logOutUserController, userLoginController, userRegisterController, verifyEmailController } from "../controllers/user/userController";
+import { checkAdminAuthMiddleware } from "../midleware/checkAdminAuth";
+import { checkUserAuthMiddelware } from "../midleware/checkUserAuth";
 
+
+
+const express = require('express');
 
 const userRouter = express.Router();
 
-
+/* Auth Routes */
 userRouter.post("/register", userRegisterController)
 userRouter.post("/login", userLoginController)
 userRouter.post("/forgotPassword", forgotPasswordController)
-userRouter.post("/logout", logOutUserController)
+userRouter.post("/logout", checkUserAuthMiddelware,logOutUserController)
+
+userRouter.get("/emailVerify/:email/:token", verifyEmailController)
+
+
+
+/* User Routes */
+userRouter.get("/allUsers", checkAdminAuthMiddleware, getAllUsersController)
+
+userRouter.get("/:id", checkUserAuthMiddelware, getSingleUserController)
+
 userRouter.post("/changePassword", changePasswordController)
 
-
-userRouter.get("/authenticate", userAuthticateController)
-userRouter.get("/allUsers", getAllUsersController)
-userRouter.get("/emailVerify/:email/:token", verifyEmailController)
-userRouter.get("/:id", getSingleUserController)
+userRouter.get("/delete",checkUserAuthMiddelware,deleteUserController )
 
 
-
-module.exports = userRouter
+userRouter.get("/deleteAll",checkAdminAuthMiddleware )
+export default userRouter

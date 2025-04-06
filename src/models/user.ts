@@ -9,9 +9,9 @@ import { userSchemaInterface } from "../appTypes/types";
 const userSchema = new mongoose.Schema<userSchemaInterface>(
   {
         fullName: {
-            type: String, required: true
+            type: String, required: true, trim: true
         },
-    email: { type: String, required: true },
+    email: { type: String, required: true,  unique: true, trim: true },
     password: { type: String, required: true },
     phone: {
             type: String, default: null
@@ -48,7 +48,7 @@ const userSchema = new mongoose.Schema<userSchemaInterface>(
         },
         deviceType: {
             type: String,
-            required: true
+            default: null
         },
         transferPin: {
             type: String,
@@ -122,10 +122,9 @@ userSchema.methods.createEmailVerificationToken = function (): String {
 
 
 // Method to check if the email Verification token is valid 
-userSchema.methods.isEmailVerificationTokenValid = function (emailToken: string) {
-  return (
-    this.accountVerificationToken = emailToken
-  );
+userSchema.methods.isEmailVerificationTokenValid = function (emailToken: string): boolean {
+  return this.accountVerificationToken == emailToken
+  
 };
 
 const UserModel = mongoose.model("User", userSchema);

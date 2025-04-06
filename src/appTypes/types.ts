@@ -1,4 +1,5 @@
 import { Document } from "mongoose"
+import { Request } from "express"
 
 export interface userSchemaInterface extends Document {
     fullName: string;
@@ -19,6 +20,7 @@ export interface userSchemaInterface extends Document {
     createEmailVerificationToken: () => string; 
     comparePassword: (candidatePassword: string) => boolean;
     createPasswordResetCode: () => number;
+    isEmailVerificationTokenValid: (emailToken: string) => boolean;
     isPasswordResetTokenValid: (token: string) => boolean
 
 
@@ -48,3 +50,18 @@ export interface registerAccount {
     phone: string,
     deviceType: string
 }
+
+// the cookies was added so as to retain the cookie property in the request 
+export interface IGetUserAuthInfoRequest extends Request{
+    params: { id: string}
+    user?: userSchemaInterface;
+   
+    cookies: {
+      token?: string;
+      [key: string]: any;
+    };
+
+  }
+
+
+

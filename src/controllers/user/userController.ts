@@ -2,16 +2,14 @@ import expressAsyncHandler from "express-async-handler"
 import jwt, { JwtPayload} from "jsonwebtoken"
 import { NextFunction, Request, Response } from "express"
 
-
 import isValidObjectId from "../../helpers/mongooseIdValidity";
 import UserModel from "../../models/user";
-import { registerType } from "../../appTypes/types";
+import { IGetUserAuthInfoRequest, registerType, userSchemaInterface } from "../../appTypes/types";
 import sendBrevoEmail from "../../helpers/mailsSender";
 
 
-
 // register user controller
-const userRegisterController = expressAsyncHandler(async (req: Request<{}, {}, registerType>, res:Response ): Promise<void> => {
+export const userRegisterController = expressAsyncHandler(async (req: Request<{}, {}, registerType>, res:Response ): Promise<void> => {
     const { 
         email,
         fullName,
@@ -54,7 +52,7 @@ const userRegisterController = expressAsyncHandler(async (req: Request<{}, {}, r
     emailVerificationToken;
   const message =
     "Please click here " + verifyEmailEndpoint + " to verify your email";
- 
+ console.log("email token created", emailVerificationToken)
 
   await registeredUser.save();
   /* send email for verification */
@@ -78,27 +76,29 @@ const userRegisterController = expressAsyncHandler(async (req: Request<{}, {}, r
 
    res.status(201).json({
     status: "success",
-    message: "Please verify your email",
+    message: "Account created, please verify your email",
     data: registeredUser,
-    meta: message,
+    meta: message
   });
 });
 
 /* verify user email */
 
-const verifyEmailController = expressAsyncHandler(async (req: Request<{
+export const verifyEmailController = expressAsyncHandler(async (req: Request<{
     email: string,
     token: string
 }>, res): Promise<void> => {
   const { email, token } = req.params;
- 
+ console.log("code ran at verify")
 
   if (!token || !email) {
     throw new Error("Missing credentials");
   }
 
+
+  
   const foundUser = await UserModel.findOne({
-    email,
+    email
   });
   if (!foundUser) {
      res.status(401).json({
@@ -107,6 +107,11 @@ const verifyEmailController = expressAsyncHandler(async (req: Request<{
      });
       return
   }
+
+  const isTokenValid = foundUser.isEmailVerificationTokenValid(token)
+  if (!isTokenValid) { 
+  throw new Error("Invalid user token")
+  }
   foundUser.isEmailVerified = true;
   foundUser.accountVerificationToken = null;
   await foundUser.save();
@@ -114,7 +119,7 @@ const verifyEmailController = expressAsyncHandler(async (req: Request<{
   res.redirect(url);
 });
 
-const userLoginController = expressAsyncHandler(async (req: Request<{}, {}, {
+export const userLoginController = expressAsyncHandler(async (req: Request<{}, {}, {
     email: string,
     password: string
 }>, res: Response, next: NextFunction): Promise<void> => {
@@ -184,48 +189,17 @@ const userLoginController = expressAsyncHandler(async (req: Request<{}, {}, {
   });
 });
 
-const userAuthticateController = expressAsyncHandler(async (req: Request<{}, {}>, res:Response): Promise<void> => {
-  try {
-    // console.log(req)
-    const { token } = req.cookies;
-    if (!token) {
-       res.status(200).json({
-        isAuthenticated: false,
-       });
-        return
-    }
- 
-      const { id } = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
-    
-    const foundUser = await UserModel.findById(id);
-    if (!foundUser) {
-       res.status(401).json({
-          isAuthenticated: false,
-          user: "user not logged in"
-       });
-        return
-    }
-   res.status(200).json({
-      isAuthenticated: true,
-      userName: foundUser.fullName,
-      id: foundUser._id,
-   });
-    
-  } catch (error) {
-   res.status(401).json({
-      isAuthenticated: false,
-    });
-  }
-});
 
-const getAllUsersController = expressAsyncHandler(async (req, res): Promise<void> => {
+
+export const getAllUsersController = expressAsyncHandler(async (req, res): Promise<void> => {
   try {
     const users = await UserModel.find();
     res.status(201).json({
       status: "success",
-      users,
+      message: "Users fetched successfuly",
+      users
     });
-  } catch (error ) {
+  } catch (error) {
       if (error instanceof Error) {
           throw new Error(error.message);
       } else { 
@@ -234,13 +208,13 @@ const getAllUsersController = expressAsyncHandler(async (req, res): Promise<void
   }
 });
 
-const getSingleUserController = expressAsyncHandler(async (req, res): Promise<void> => {
+export const getSingleUserController = expressAsyncHandler(async (req, res): Promise<void> => {
   const { id } = req.params;
   const isIdVallid = isValidObjectId(id.toString());
   if (!id || !isIdVallid) {
      res.status(404).json({
-      status: "false",
-      message: "Invaild tid not found",
+      status: "failed",
+      message: "Invaild id or id not found",
      });
       return
   }
@@ -248,31 +222,32 @@ const getSingleUserController = expressAsyncHandler(async (req, res): Promise<vo
   const userFound = await UserModel.findById(id);
   if (!userFound) {
      res.status(404).json({
-      status: "false",
+      status: "failed",
       message: "User not found",
      });
       return
   }
 
 res.status(200).json({
-    status: "success",
+  status: "success",
+  mesage: "User fetched successfuly",
     user: userFound,
   });
 });
 
-const logOutUserController = expressAsyncHandler(async (req, res): Promise<void> => {
+export const logOutUserController = expressAsyncHandler(async (req, res): Promise<void> => {
   res.cookie("token", "", {
     maxAge: 1,
   });
   res.status(200).json({
-    isAuthenticated: false,
+    status: "success",
     message: "user logged out",
   });
 });
 
 /* forgot password */
 
-const forgotPasswordController = expressAsyncHandler(async (req, res): Promise<void> => {
+export const forgotPasswordController = expressAsyncHandler(async (req, res): Promise<void> => {
   const { email } = req.body;
   if (!email) {
     throw new Error("Missing credentials");
@@ -321,7 +296,7 @@ res.status(401).json({
   });
 });
 
-const changePasswordController = expressAsyncHandler(async (req, res): Promise<void> => {
+export const changePasswordController = expressAsyncHandler(async (req, res): Promise<void> => {
   const { email, token, password } = req.body;
   if (!email || !token || !password) {
     throw new Error("Missing credentials");
@@ -374,9 +349,17 @@ const changePasswordController = expressAsyncHandler(async (req, res): Promise<v
   });
 });
 
-const deleteUserController = expressAsyncHandler(async (req, res) : Promise<void> => {
+export const deleteUserController = expressAsyncHandler(async (req: IGetUserAuthInfoRequest, res:Response): Promise<void> => {
+  
+  const user = req.user
   const { id } = req.params;
-
+  if ( user && user._id !== id) { 
+    res.status(403).json({
+      message: "Admine role only",
+      status: "false"
+    })
+    return
+}
   // check if id is sent
   if (!id) {
     throw new Error("Missing user Id");
@@ -397,15 +380,3 @@ const deleteUserController = expressAsyncHandler(async (req, res) : Promise<void
   });
 });
 
-module.exports = {
-  userRegisterController,
-  userLoginController,
-  userAuthticateController,
-  getAllUsersController,
-  getSingleUserController,
-  logOutUserController,
-  verifyEmailController,
-  forgotPasswordController,
-  changePasswordController,
-  deleteUserController
-};
