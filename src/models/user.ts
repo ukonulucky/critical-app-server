@@ -15,7 +15,11 @@ const userSchema = new mongoose.Schema<userSchemaInterface>(
     password: { type: String, required: true },
     phone: {
             type: String, default: null
-        },
+    },
+    phoneVerificationCode: {
+      type: String,
+      default: null
+    },
         isPhoneVerified: {
             type: Boolean,
             default: false
@@ -49,14 +53,6 @@ const userSchema = new mongoose.Schema<userSchemaInterface>(
         deviceType: {
             type: String,
             default: null
-        },
-        transferPin: {
-            type: String,
-            default: null
-        },
-        isTransferPinVerified: {
-            type: Boolean,
-            default: false
         }
 
   },
@@ -123,9 +119,40 @@ userSchema.methods.createEmailVerificationToken = function (): String {
 
 // Method to check if the email Verification token is valid 
 userSchema.methods.isEmailVerificationTokenValid = function (emailToken: string): boolean {
-  return this.accountVerificationToken == emailToken
+  return this.accountVerificationToken === emailToken
   
 };
+
+
+/* static methods for creating and verifying phone number token */
+
+// creating and set the token
+userSchema.methods.createPhoneNumberVerificationOTP = function (phoneNumber: string): number {
+ 
+    // Generate a random number between 10000 and 99999
+    const phoneOTP = crypto.randomInt(10000, 100000); // 100000 is exclusive
+
+  // Set account verifcation token
+  this.phone= phoneNumber;
+  this.phoneVerificationCode = phoneOTP
+
+  return phoneOTP;
+};
+
+// verify the phoneToken token
+userSchema.methods.isPhoneNumberVerificationOTPValid = function (phoneToken: string): boolean {
+  if (this.phoneVerificationCode === phoneToken) {
+    this.isPhoneVerified = true
+    this.phoneVerificationCode = null
+    return true
+  } else { 
+    return false
+  }
+  
+};
+
+
+
 
 const UserModel = mongoose.model("User", userSchema);
 

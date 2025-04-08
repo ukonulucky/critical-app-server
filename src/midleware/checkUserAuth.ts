@@ -16,8 +16,9 @@ export const checkUserAuthMiddelware = async (req: IGetUserAuthInfoRequest, res:
         
     }
     try {
+ 
         const { id } = jwt.verify(userJwt, process.env.JWT_SECRET as string) as { id: string }
-        
+     
         const user = await UserModel.findById(id)
         if (!user) { 
             res.status(401).json({ message: "User not found" ,isAuthenticated: false });

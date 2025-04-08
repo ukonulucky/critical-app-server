@@ -5,6 +5,7 @@ import dotenv from "dotenv"
 import connectDb from "./config/dbConnect";
 import cors from "cors"
 import userRouter from "./routes/userRoutes";
+import { TwilloPhoneOtpSender } from "./helpers/sendPhoneOtp";
 dotenv.config()
 
 
@@ -42,7 +43,8 @@ app.use("/api/v1/user", userRouter)
 /* for home route */
 app.get("/", async(req, res) => { 
     res.send("Server running")
-   })
+})
+/* TwilloPhoneOtpSender()  */
 
 app.use((req: Request, res:Response, next:NextFunction) => {
     res.status(404).json({

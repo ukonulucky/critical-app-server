@@ -1,4 +1,4 @@
-import { changePasswordController, deleteUserController, forgotPasswordController, getAllUsersController, getSingleUserController, logOutUserController, userLoginController, userRegisterController, verifyEmailController } from "../controllers/user/userController";
+import {  changePasswordOTPVerificationController, deleteUserController, forgotPasswordController, getSingleUserController, logOutUserController, registerUserPhoneController, userLoginController, userRegisterController, verifyEmailController, verifyUserPhoneController } from "../controllers/user/userController";
 import { checkAdminAuthMiddleware } from "../midleware/checkAdminAuth";
 import { checkUserAuthMiddelware } from "../midleware/checkUserAuth";
 
@@ -10,23 +10,34 @@ const userRouter = express.Router();
 
 /* Auth Routes */
 userRouter.post("/register", userRegisterController)
+
 userRouter.post("/login", userLoginController)
-userRouter.post("/forgotPassword", forgotPasswordController)
-userRouter.post("/logout", checkUserAuthMiddelware,logOutUserController)
+
+
+userRouter.get("/logout", checkUserAuthMiddelware, logOutUserController)
+
 
 userRouter.get("/emailVerify/:email/:token", verifyEmailController)
+
+userRouter.post("/forgotPassword", forgotPasswordController)
+
+userRouter.post("/changePassword/OTPveirfy", changePasswordOTPVerificationController)
+
+userRouter.post("/registerPhone/:id", registerUserPhoneController)
+
+userRouter.post("/verifyPhone/:id", verifyUserPhoneController)
+
 
 
 
 /* User Routes */
-userRouter.get("/allUsers", checkAdminAuthMiddleware, getAllUsersController)
+
 
 userRouter.get("/:id", checkUserAuthMiddelware, getSingleUserController)
 
-userRouter.post("/changePassword", changePasswordController)
-
-userRouter.get("/delete",checkUserAuthMiddelware,deleteUserController )
 
 
-userRouter.get("/deleteAll",checkAdminAuthMiddleware )
+userRouter.delete("/delete/:id",checkUserAuthMiddelware,deleteUserController )
+
+
 export default userRouter
