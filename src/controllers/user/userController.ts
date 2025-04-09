@@ -1,12 +1,14 @@
 import expressAsyncHandler from "express-async-handler"
 import jwt from "jsonwebtoken"
-import { NextFunction, Request, Response } from "express"
+import {  Request, Response } from "express"
 
 import isValidObjectId from "../../helpers/mongooseIdValidity";
 import UserModel from "../../models/user";
 import { IGetUserAuthInfoRequest, registerType } from "../../appTypes/types";
 import sendBrevoEmail from "../../helpers/mailsSender";
 import { TwilloPhoneOtpSender } from "../../helpers/sendPhoneOtp";
+import BankModel from "../../models/bank";
+import { decrypt } from "../../helpers/decrypt";
 
 
 // register user controller
@@ -91,7 +93,9 @@ export const userLoginController = expressAsyncHandler(async (req: Request<{}, {
   password: string
 }>, res: Response): Promise<void> => {
 /* find user  */
-const { email, password } = req.body;
+  const { email, password } = req.body;
+  
+ 
 // check if email and password are sent
 if (!email || !password) {
   throw new Error("Missing credentials");
@@ -150,6 +154,8 @@ const { _id } = user;
 // set jwt token for the user
 const token = jwt.sign({ id: _id }, process.env.JWT_SECRET as string);
 
+
+  console.log("this is the jwt:", process.env.JWT_SECRET)
 // set cookie
 
 res.cookie("token", token, {
@@ -323,16 +329,27 @@ export const changePasswordOTPVerificationController = expressAsyncHandler(async
 
 
 
-export const registerUserPhoneController = expressAsyncHandler(async (req:IGetUserAuthInfoRequest, res:Response): Promise<void> => {
+export const registerUserPhoneController = expressAsyncHandler(async (req: IGetUserAuthInfoRequest, res: Response): Promise<void> => {
+ 
+
   const { id } = req.params
+  const decryptedId = decrypt(id)
   const { phone } = req.body
+  console.log("decrypted id  from phone:", decryptedId)
 
-
+  const isIdVallid = isValidObjectId(decryptedId.toString());
+  if (!decryptedId || !isIdVallid) {
+     res.status(404).json({
+      status: "failed",
+      message: "Invaild id or id not found",
+     });
+      return
+  }
   if (!phone) { 
      throw new Error("Missing crredentials")
   }
 
-  const user = await UserModel.findById(id)
+  const user = await UserModel.findById(decryptedId)
 
   if (!user) { 
     res.status(404).json({
@@ -367,13 +384,22 @@ export const registerUserPhoneController = expressAsyncHandler(async (req:IGetUs
 export const verifyUserPhoneController = expressAsyncHandler(async (req:IGetUserAuthInfoRequest, res:Response): Promise<void> => {
   const { id } = req.params
   const { OTP } = req.body
-
-
   if (!id || !OTP) { 
-     throw new Error("Missing crredentials")
+    throw new Error("Missing crredentials")
+ }
+
+  const decryptedId = decrypt(id)
+  const isIdVallid = isValidObjectId(decryptedId.toString());
+  if (!id || !isIdVallid) {
+     res.status(404).json({
+      status: "failed",
+      message: "Invaild id or id not found",
+     });
+      return
   }
 
-  const user = await UserModel.findById(id)
+ 
+  const user = await UserModel.findById(decryptedId)
 
   if (!user) { 
     res.status(404).json({
@@ -384,10 +410,10 @@ export const verifyUserPhoneController = expressAsyncHandler(async (req:IGetUser
   }
 
 
-  const isOtpCorrect = user.isPhoneNumberVerificationOTPValid(OTP)
+  const { result, accountNumber, accountName, userId} = user.isPhoneNumberVerificationOTPValid(OTP)
 
  await user.save()
-  if (!isOtpCorrect) { 
+  if (!result) { 
     res.status(400).json({
       status: "false",
       message: "Incorrect or Invalid Otp... please retry"
@@ -397,13 +423,22 @@ export const verifyUserPhoneController = expressAsyncHandler(async (req:IGetUser
     return 
   }
 
+  const accountSave = await BankModel.create(
+    {
+      accountNumber,
+      accountName,
+      userId
+
+    }
+  )
+  if (!accountSave) { 
+  throw new Error("Error occured in account creation, please retry phonenumber verification")
+  }
+  console.log("created account", accountSave)
   res.status(200).json({
     status: "true",
-    message: "Phone number successfully verified"
+    message: "Phone number successfully verified and account created successfuly"
   })
-
-
-  
  
 });
 
@@ -411,7 +446,8 @@ export const verifyUserPhoneController = expressAsyncHandler(async (req:IGetUser
 export const getSingleUserController = expressAsyncHandler(async (req, res): Promise<void> => {
   
   const { id } = req.params;
-  const isIdVallid = isValidObjectId(id.toString());
+  const decryptedId = decrypt(id)
+  const isIdVallid = isValidObjectId(decryptedId.toString());
   if (!id || !isIdVallid) {
      res.status(404).json({
       status: "failed",
@@ -420,7 +456,7 @@ export const getSingleUserController = expressAsyncHandler(async (req, res): Pro
       return
   }
 
-  const userFound = await UserModel.findById(id);
+  const userFound = await UserModel.findById(decryptedId);
   if (!userFound) {
      res.status(404).json({
       status: "failed",
@@ -441,8 +477,18 @@ export const deleteUserController = expressAsyncHandler(async (req: IGetUserAuth
   
   const user = req.user
   const { id } = req.params;
-  console.log("user passed", user)
-  if ( user && user._id.toString() !== id) { 
+  
+  const decryptedId = decrypt(id)
+  const isIdVallid = isValidObjectId(decryptedId.toString());
+  if (!id || !isIdVallid) {
+     res.status(404).json({
+      status: "failed",
+      message: "Invaild id or id not found",
+     });
+      return
+  }
+
+  if ( user && user._id.toString() !== decryptedId.toString()) { 
     res.status(403).json({
       message: "Admine role only",
       status: "false"
@@ -456,7 +502,7 @@ export const deleteUserController = expressAsyncHandler(async (req: IGetUserAuth
 
   // delete user
 
-  const deletedUser = await UserModel.findByIdAndDelete(id);
+  const deletedUser = await UserModel.findByIdAndDelete(decryptedId);
 
   if (!deletedUser) {
     throw new Error("Failed to delete user");

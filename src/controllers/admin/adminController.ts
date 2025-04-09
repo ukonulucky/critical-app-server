@@ -1,17 +1,11 @@
 import expressAsyncHandler from "express-async-handler"
-import jwt from "jsonwebtoken"
-import { NextFunction, Request, Response } from "express"
-
+import {  Request, Response } from "express"
+import { decrypt } from "../../helpers/decrypt";
 import isValidObjectId from "../../helpers/mongooseIdValidity";
 import UserModel from "../../models/user";
 import { IGetUserAuthInfoRequest, registerType } from "../../appTypes/types";
-import sendBrevoEmail from "../../helpers/mailsSender";
 
-
-
-
-
-
+import BankModel from "../../models/bank";
 
 
 
@@ -38,8 +32,9 @@ export const getAllUsersAdminController = expressAsyncHandler(async (req: Reques
 
 export const getSingleUserAdminController = expressAsyncHandler(async (req, res): Promise<void> => {
   const { id } = req.params;
-  const isIdVallid = isValidObjectId(id.toString());
-  if (!id || !isIdVallid) {
+  const decryptedId  = decrypt(id)
+  const isIdVallid = isValidObjectId(decryptedId.toString());
+  if (!decryptedId || !isIdVallid) {
      res.status(404).json({
       status: "failed",
       message: "Invaild id or id not found",
@@ -47,7 +42,7 @@ export const getSingleUserAdminController = expressAsyncHandler(async (req, res)
       return
   }
 
-  const userFound = await UserModel.findById(id);
+  const userFound = await UserModel.findById(decryptedId);
   if (!userFound) {
      res.status(404).json({
       status: "failed",
@@ -65,27 +60,22 @@ res.status(200).json({
 
 
 
-/* forgot password */
-
-
-
-
-
-export const deleteUserController = expressAsyncHandler(async (req: IGetUserAuthInfoRequest, res:Response): Promise<void> => {
+export const deleteUserAdminController = expressAsyncHandler(async (req: IGetUserAuthInfoRequest, res:Response): Promise<void> => {
   
   const user = req.user
   const { id } = req.params;
-  if ( user && user._id !== id) { 
-    res.status(403).json({
-      message: "Admine role only",
-      status: "false"
-    })
-    return
-}
-  // check if id is sent
-  if (!id) {
-    throw new Error("Missing user Id");
+  const decryptedId  = decrypt(id)
+  const isIdVallid = isValidObjectId(decryptedId.toString());
+  if (!decryptedId || !isIdVallid) {
+     res.status(404).json({
+      status: "failed",
+      message: "Invaild id or id not found",
+     });
+      return
   }
+
+  // check if id is sent
+ 
 
   // delete user
 
@@ -102,3 +92,61 @@ export const deleteUserController = expressAsyncHandler(async (req: IGetUserAuth
   });
 });
 
+export const deleteAllUserAdminController = expressAsyncHandler(async(req:Request, res:Response) => { 
+  const deleteAll = await UserModel.deleteMany({});
+  res.status(201).json({
+    status: "success",
+    message: "All users deleted successfully",
+    data: deleteAll,
+  });
+})
+
+
+// bank controllers
+
+export const getAllAccounController = expressAsyncHandler(async (req: IGetUserAuthInfoRequest, res:Response): Promise<void> => {
+  
+  // get all accounts
+  const accounts = await BankModel.find({}).populate("userId").exec();
+
+   res.status(200).json({
+    status: "success",
+    message: "Account fetched successfully",
+    accounts
+  });
+});
+
+
+export const getSingleAccountAdminController = expressAsyncHandler(async (req, res): Promise<void> => {
+  const { id } = req.params;
+  const decryptedId  = decrypt(id)
+  const isIdVallid = isValidObjectId(decryptedId.toString());
+  if (!decryptedId || !isIdVallid) {
+     res.status(404).json({
+      status: "failed",
+      message: "Invaild id or id not found",
+     });
+      return
+  }
+
+  const accountFound = await BankModel.findById(decryptedId);
+  if (!accountFound) {
+     res.status(404).json({
+      status: "failed",
+      message: "Account not found",
+     });
+      return
+  }
+
+res.status(200).json({
+  status: "success",
+  mesage: "Account fetched successfuly",
+    user: accountFound,
+  });
+});
+
+
+
+export const createTransferPin = expressAsyncHandler(async() => { 
+
+})

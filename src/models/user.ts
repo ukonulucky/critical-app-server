@@ -2,6 +2,8 @@ import mongoose, {Error } from "mongoose"
 import crypto from "crypto"
 import bcrypt from "bcryptjs"
 import { userSchemaInterface } from "../appTypes/types";
+import { encrypt } from "../helpers/encrypt";
+import { decrypt } from "../helpers/decrypt";
 
 
 
@@ -53,7 +55,11 @@ const userSchema = new mongoose.Schema<userSchemaInterface>(
         deviceType: {
             type: String,
             default: null
-        }
+    },
+    url: {
+      type: String,
+      default: null
+    }
 
   },
 
@@ -62,7 +68,12 @@ const userSchema = new mongoose.Schema<userSchemaInterface>(
 
 
 // Hash the password before saving it to the database
-userSchema.pre<userSchemaInterface>('save', async function (next) {
+userSchema.pre<mongoose.Document & userSchemaInterface>('save', async function (next) {
+  if (this.isNew) {
+    // update the url field only when the user is first created
+    this.url = encrypt(this._id);
+   
+  }
   if (!this.isModified('password')) return next();
 
   try {
@@ -140,13 +151,25 @@ userSchema.methods.createPhoneNumberVerificationOTP = function (phoneNumber: str
 };
 
 // verify the phoneToken token
-userSchema.methods.isPhoneNumberVerificationOTPValid = function (phoneToken: string): boolean {
+userSchema.methods.isPhoneNumberVerificationOTPValid = function (phoneToken: string): {
+  result: boolean,
+  accountNumber?: number,
+  accountName?: string,
+  userId?:string
+}{
   if (this.phoneVerificationCode === phoneToken) {
     this.isPhoneVerified = true
     this.phoneVerificationCode = null
-    return true
+    return {
+      result: true,
+      accountNumber: this.phone.slice(1),
+      accountName: this.fullName,
+      userId: this._id
+    }
   } else { 
-    return false
+    return {
+      result : false
+    }
   }
   
 };

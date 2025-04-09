@@ -2,11 +2,16 @@
 import express, { Response, Request, NextFunction } from "express"
 import cookieParser from "cookie-parser"
 import dotenv from "dotenv"
-import connectDb from "./config/dbConnect";
 import cors from "cors"
-import userRouter from "./routes/userRoutes";
-import { TwilloPhoneOtpSender } from "./helpers/sendPhoneOtp";
+import helmet from "helmet"
+import rateLimit from "express-rate-limit"
+
 dotenv.config()
+
+import connectDb from "./config/dbConnect";
+import userRouter from "./routes/userRoutes";
+
+
 
 
 
@@ -28,6 +33,14 @@ app.use(cookieParser())
 app.use(express.json())
 app.use(cors(corsOptions))
 
+
+// limts the number of api call from a giving browser 
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+  });
+  app.use(limiter);
+  
 
 
 

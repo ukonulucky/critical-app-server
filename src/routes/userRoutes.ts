@@ -1,5 +1,5 @@
 import {  changePasswordOTPVerificationController, deleteUserController, forgotPasswordController, getSingleUserController, logOutUserController, registerUserPhoneController, userLoginController, userRegisterController, verifyEmailController, verifyUserPhoneController } from "../controllers/user/userController";
-import { checkAdminAuthMiddleware } from "../midleware/checkAdminAuth";
+
 import { checkUserAuthMiddelware } from "../midleware/checkUserAuth";
 
 
@@ -21,11 +21,11 @@ userRouter.get("/emailVerify/:email/:token", verifyEmailController)
 
 userRouter.post("/forgotPassword", forgotPasswordController)
 
-userRouter.post("/changePassword/OTPveirfy", changePasswordOTPVerificationController)
+userRouter.post("/changePassword/OTPveirfy",changePasswordOTPVerificationController)
 
-userRouter.post("/registerPhone/:id", registerUserPhoneController)
+userRouter.post("/registerPhone/:id",checkUserAuthMiddelware, registerUserPhoneController)
 
-userRouter.post("/verifyPhone/:id", verifyUserPhoneController)
+userRouter.post("/verifyPhone/:id",checkUserAuthMiddelware, verifyUserPhoneController)
 
 
 

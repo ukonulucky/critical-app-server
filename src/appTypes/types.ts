@@ -1,4 +1,4 @@
-import { Document } from "mongoose"
+import { Document, Types } from "mongoose"
 import { Request } from "express"
 
 export interface userSchemaInterface extends Document {
@@ -7,6 +7,7 @@ export interface userSchemaInterface extends Document {
     password: string;
     phone: string;
     email: string;
+    url: string;
     isPhoneVerified: Boolean;
     passwordResetExpires: Date | null;
     passwordResetToken: string | null;
@@ -26,7 +27,12 @@ export interface userSchemaInterface extends Document {
     isPasswordResetTokenValid: (token: string) => boolean;
     createPhoneNumberVerificationOTP: (phoneNumber: string) => number
 
-    isPhoneNumberVerificationOTPValid: (phoneToken: string) => boolean;    
+    isPhoneNumberVerificationOTPValid: (phoneToken: string) => {
+        result: boolean,
+        accountNumber?: number,
+        accountName?: string,
+        userId?:string
+    };    
 }
   
 
@@ -73,20 +79,26 @@ export interface twillioOptionType {
 
 
 export interface bankSchemaType { 
-    userId: string,
+    _id: string,
+    userId: Types.ObjectId,
     balance: number,
     accountNumber: string,
     accountName: string,
     creditTransactions: string[]
-    depitTransaction: string[],
-    transferPin: {
-        type: String,
-        default: null
-    },
+    depitTransaction: {
+        name: string,
+        amount: number,
+        date: Date
+    }[],
+    transferPin: number,
     isTransferPinVerified: {
         type: Boolean,
         default: false
-    }
+    },
+    url: string,
+    transferPinVerificationCode: number | null,
+    createTransferPinVerificationOTP: number | null,
+    isTransferPinVerificationOTPValid: boolean
 
 
 }
