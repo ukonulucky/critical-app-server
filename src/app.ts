@@ -10,6 +10,7 @@ dotenv.config()
 
 import connectDb from "./config/dbConnect";
 import userRouter from "./routes/userRoutes";
+import adminRouter from "./routes/adminRoutes"
 
 
 
@@ -51,7 +52,7 @@ const limiter = rateLimit({
 
 app.use("/api/v1/user", userRouter)
 
-
+app.use("/api/v1/admin", adminRouter)
 
 /* for home route */
 app.get("/", async(req, res) => { 

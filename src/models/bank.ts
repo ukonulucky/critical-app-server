@@ -76,10 +76,10 @@ bankSchema.pre<mongoose.Document & bankSchemaType>('save', async function (next)
 });
 
 
-bankSchema.methods.createTransferPinVerificationOTP =  function (code:number): number {
+bankSchema.methods.createTransferPinVerificationOTP =  function (transferPin:number): number {
       const phoneOTP = crypto.randomInt(10000, 100000); // 100000 is exclusive
     this.transferPinVerificationCode = phoneOTP
-    this.transferPin = code
+    this.transferPin = transferPin
     return phoneOTP
 }
 
@@ -88,7 +88,7 @@ bankSchema.methods.isTransferPinVerificationOTPValid = function (OTP: number): b
     const result = this.transferPinVerificationCode === OTP
 
     if (result) {
-        this.isTransferPinVerificationOTPValid = true
+        this.isTransferPinVerified = true
         return true
     } else { 
         this.transferPin = null

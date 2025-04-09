@@ -3,9 +3,10 @@ import {  Request, Response } from "express"
 import { decrypt } from "../../helpers/decrypt";
 import isValidObjectId from "../../helpers/mongooseIdValidity";
 import UserModel from "../../models/user";
-import { IGetUserAuthInfoRequest, registerType } from "../../appTypes/types";
+import { IGetUserAuthInfoRequest} from "../../appTypes/types";
 
 import BankModel from "../../models/bank";
+import { TwilloPhoneOtpSender } from "../../helpers/sendPhoneOtp";
 
 
 
@@ -147,6 +148,38 @@ res.status(200).json({
 
 
 
-export const createTransferPin = expressAsyncHandler(async() => { 
+export const createTransferPin = expressAsyncHandler(async(req:IGetUserAuthInfoRequest, res:Response) => { 
 
+  const id = req.user?._id
+  const { transferPin } = req.body
+  if (!transferPin) { 
+    throw new Error("Missing crredentials")
+  }
+  
+
+  const getAccount = await BankModel.findOne({
+    userId: id?.toString() 
+  }).populate("userId").exec()
+  if (!getAccount) { 
+    res.status(404).json({
+      status: "false",
+      message: "User not found"
+    })
+    return
+  }
+
+  // generate OTP
+  const getOtp = getAccount.createTransferPinVerificationOTP(transferPin)
+  // send otp to user phone
+  const phone = getAccount?.userId?.phone
+
+
+
+  res.status(200).json({
+    data: getAccount
+  })
+  TwilloPhoneOtpSender({
+    OTP: getOtp,
+    receivingNumber: phone
+  })
 })

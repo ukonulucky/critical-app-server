@@ -5,9 +5,6 @@ import { IGetUserAuthInfoRequest } from "../appTypes/types";
 
 
 
-
-
-
 export const checkAdminAuthMiddleware = async (req: IGetUserAuthInfoRequest, res:Response, next:NextFunction): Promise<void> => { 
  const userJwt = req.cookies?.token
     if (!userJwt) { 
@@ -25,6 +22,7 @@ export const checkAdminAuthMiddleware = async (req: IGetUserAuthInfoRequest, res
             return 
         }
         const { role } = user
+        console.log("user found:", user)
         if (role !== "admin") {
             /* 403 status code means forbidden */
             res.status(403).json({ message: "Admin permission requred" ,isAuthenticated: "false" });

@@ -117,39 +117,7 @@ if ( !isPasswordCorrect) {
 }
 
 const { isEmailVerified, accountVerificationToken, fullName } = user;
-  if (!isEmailVerified) {
-  
-    /* send email to verify user email */
-  const verifyEmailEndpoint =
-    process.env.SERVER_URL +
-    "/api/v1/user" +
-    "/emailVerify/" +
-    email +
-    "/" +
-    accountVerificationToken;
-
-  /*    sendBrevoEmail(option2) */
-  const option = {
-    subject: "Email Verification",
-    emailTemplate:
-      "Please click here " + verifyEmailEndpoint + " to verify your email",
-    to: [
-      {
-        email: email,
-        name: fullName,
-      },
-    ],
-    senderName:"online bank assessment"
-  };
-
-    sendBrevoEmail(option);
-    res.status(200).json({
-      status: "false",
-      message: "Failed to login, email not verified, please check your mail to verify your email",
-      user,
-    });
-    return
-}
+ 
 const { _id } = user;
 // set jwt token for the user
 const token = jwt.sign({ id: _id }, process.env.JWT_SECRET as string);

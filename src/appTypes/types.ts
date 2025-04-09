@@ -84,21 +84,22 @@ export interface bankSchemaType {
     balance: number,
     accountNumber: string,
     accountName: string,
-    creditTransactions: string[]
+    creditTransactions: {
+        name:   String,
+            amount: Number,
+            date: Date
+    }[]
     depitTransaction: {
         name: string,
         amount: number,
         date: Date
     }[],
     transferPin: number,
-    isTransferPinVerified: {
-        type: Boolean,
-        default: false
-    },
+    isTransferPinVerified: boolean,
     url: string,
-    transferPinVerificationCode: number | null,
-    createTransferPinVerificationOTP: number | null,
-    isTransferPinVerificationOTPValid: boolean
+    transferPinVerificationCode:number
+    createTransferPinVerificationOTP: (transferPin:number) => number,
+    isTransferPinVerificationOTPValid:(cdoe:number)=> boolean
 
 
 }

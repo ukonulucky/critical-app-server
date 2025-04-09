@@ -1,4 +1,4 @@
-import { deleteAllUserAdminController, deleteUserAdminController, getAllAccounController, getAllUsersAdminController, getSingleUserAdminController } from "../controllers/admin/adminController";
+import { createTransferPin, deleteAllUserAdminController, deleteUserAdminController, getAllAccounController, getAllUsersAdminController, getSingleUserAdminController } from "../controllers/admin/adminController";
 
 import { checkAdminAuthMiddleware } from "../midleware/checkAdminAuth";
 
@@ -31,6 +31,12 @@ adminRouter.get("/delete/:id", checkAdminAuthMiddleware, deleteUserAdminControll
 
 adminRouter.get("/accounts", checkAdminAuthMiddleware, getAllAccounController)
 
+
+
+
+// create payment otp to verify pin
+
+adminRouter.post("/account/pinVerify", checkAdminAuthMiddleware,createTransferPin)
 
 export default adminRouter
 
