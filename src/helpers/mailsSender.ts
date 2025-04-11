@@ -1,24 +1,36 @@
 import { mailSenderType } from "../appTypes/types"
+import {Request, Response } from "express"
 
 const axios = require("axios")
 
-const sendBrevoEmail = async function (options: mailSenderType) {
+const sendBrevoEmail = async function (req:Request, res:Response, options: mailSenderType) {
 
+
+  const { subject,to, emailTemplate,mailData} = options; 
+
+  req.app.render(emailTemplate, mailData, async(err, html) => { 
+    if (err || !html) {
+      console.error('Template render error:', err);
+    throw new Error("Failed to render email template")
+  
+    }
 
     const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
-     const { subject,to, emailTemplate, senderName} = options; 
-  
-
+   
+/* 
+    console.log(" this is the html:", html) */
     try {
 
       const data = {
-        sender: { email: 'ukonulucky@gmail.com', name: senderName }, // { email: 'sender@example.com', name: 'Sender Name' }
+        sender: { email: 'ukonulucky@gmail.com', name: mailData.companyName }, // { email: 'sender@example.com', name: 'Sender Name' }
         to:to, // [{ email: 'recipient@example.com', name: 'Recipient Name' }]
         subject: subject,
-        htmlContent: emailTemplate,
+        htmlContent:html,
         headers: { "Homiee-User-Id": "unique-id-1234" },
       };
   
+
+
       const response = await axios.post(BREVO_API_URL, data, {
         headers: {
           "api-key": process.env.BREVO_API_KEY,
@@ -38,6 +50,9 @@ const sendBrevoEmail = async function (options: mailSenderType) {
           }
     
     }
+
+  } )
+   
 }
   
 export default sendBrevoEmail

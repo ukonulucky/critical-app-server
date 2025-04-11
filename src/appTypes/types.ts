@@ -42,8 +42,13 @@ export interface mailSenderType {
         email: string,
         name: string
     }[]
-    emailTemplate: string
-    senderName: string
+    emailTemplate: string,
+    mailData: {
+        companyName: string, 
+        userName: string,
+        link?: string,
+        verificationCode?: number
+    }
 }
 
 

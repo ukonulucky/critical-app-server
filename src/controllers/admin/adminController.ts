@@ -171,15 +171,15 @@ export const createTransferPin = expressAsyncHandler(async(req:IGetUserAuthInfoR
   // generate OTP
   const getOtp = getAccount.createTransferPinVerificationOTP(transferPin)
   // send otp to user phone
-  const phone = getAccount?.userId?.phone
+ /*  const phone = getAccount?.userId?.phone */
 
 
 
   res.status(200).json({
     data: getAccount
   })
-  TwilloPhoneOtpSender({
+  /* TwilloPhoneOtpSender({
     OTP: getOtp,
     receivingNumber: phone
-  })
+  }) */
 })

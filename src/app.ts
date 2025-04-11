@@ -5,7 +5,8 @@ import dotenv from "dotenv"
 import cors from "cors"
 import helmet from "helmet"
 import rateLimit from "express-rate-limit"
-
+import { engine } from "express-handlebars"
+import path from "path"
 dotenv.config()
 
 import connectDb from "./config/dbConnect";
@@ -27,6 +28,21 @@ const corsOptions = {
     methods: ["GET","HEAD","PUT","PATCH","POST","DELETE"],
     credentials: true, // Enable credentials (cookies, authorization headers, etc.)
 }
+
+
+ /* set static files location */
+app.use(express.static(path.join(__dirname,"public")))
+
+/* view engine setting */
+
+app.engine("hbs", engine({
+    extname: '.hbs',
+ /*    defaultLayout: false // <- disables layout */
+  }))  // instruct express to use engine as the remplating engine for any file ending in .hbs
+
+app.set("view engine", "hbs") // instruct the view engine to search for any file ending with hbs to render to the screeen
+ 
+app.set("views", path.join(__dirname, "views"))  // instruct express to search for the views folder at path ./views
 
 //Middleware
 
@@ -55,8 +71,18 @@ app.use("/api/v1/user", userRouter)
 app.use("/api/v1/admin", adminRouter)
 
 /* for home route */
+
+app.get("/emailVerify", async (req, res) => { 
+  res.render("emailVerification")
+})
+
 app.get("/", async(req, res) => { 
-    res.send("Server running")
+    res.render("accountVerification", {
+        userName: "Samuel",
+        companyName: "Online banking",
+        link: "https://ukonuluckyportfolio.vercel.app/",
+        
+    })
 })
 /* TwilloPhoneOtpSender()  */
 

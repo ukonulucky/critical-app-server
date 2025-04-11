@@ -61,19 +61,24 @@ export const userRegisterController = expressAsyncHandler(async (req: Request<{}
   /* send email for verification */
 
   const option = {
-    subject: "Email Verification",
-    emailTemplate:
-      "Please click here " + verifyEmailEndpoint + " to verify your email",
+    subject: "Activate Your Account!",
+    emailTemplate:"accountVerification",
+  
     to: [
       {
         email: createdEmail,
         name: fullName,
       },
     ],
-    senderName:"online bank assessment"
+   
+    mailData: {
+      companyName: "online bank assessment",
+      userName: fullName,
+      link: verifyEmailEndpoint 
+    }
   };
 
-  sendBrevoEmail(option);
+  sendBrevoEmail(req, res, option);
 
  
 
@@ -174,8 +179,8 @@ export const verifyEmailController = expressAsyncHandler(async (req: Request<{
   foundUser.isEmailVerified = true;
   foundUser.accountVerificationToken = null;
   await foundUser.save();
-  const url = process.env.CLIENT_URL + "/emailVerified";
-  res.redirect(url);
+  /* const url = process.env.CLIENT_URL + "/emailVerified"; */
+  res.render("emailVerification")
 });
 
 
@@ -215,29 +220,35 @@ res.status(401).json({
   const { email: userEmail, fullName } = foundUser;
 
   await foundUser.save();
-  const message =
-    "Please use this OTP " +
-    code +
-    " to change your password. OTP expires in one hour";
+ 
+
+  
 
   const option = {
     subject: "Forgot Password",
-    emailTemplate: message,
+    emailTemplate:"forgotPasswordTemplate",
+  
     to: [
       {
         email: userEmail,
         name: fullName,
       },
     ],
-    senderName:"online bank assessment"
+   
+    mailData: {
+      companyName: "online bank assessment",
+      userName: fullName,
+      link: "",
+      verificationCode:code
+    }
   };
 
-  sendBrevoEmail(option);
+   sendBrevoEmail(req, res, option);
   /*  mailSender() */
   res.status(200).json({
     error: false,
     message: "Hi, a change password OTP has been sent to your mail",
-    meta: message,
+
   });
 });
 
@@ -273,19 +284,28 @@ export const changePasswordOTPVerificationController = expressAsyncHandler(async
 
   await foundUser.save();
 
+ 
   const option = {
-    subject: "Password Updated",
-    emailTemplate: "Your password has been updated successfully",
+    subject: "Password Update Success",
+    emailTemplate:"passwordUpdateSuccessTemplate",
+  
     to: [
       {
         email: emailSaved,
         name: fullName,
       },
     ],
-    senderName:"online bank assessment"
+   
+    mailData: {
+      companyName: "online bank assessment",
+      userName: fullName,
+      link:"https://ukonuluckyportfolio.vercel.app/",
+    }
   };
 
-  sendBrevoEmail(option);
+   sendBrevoEmail(req, res, option);
+
+  /* sendBrevoEmail(option); */
 
   res.status(200).json({
     error: false,
