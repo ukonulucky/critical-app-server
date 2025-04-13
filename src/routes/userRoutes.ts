@@ -1,11 +1,11 @@
-import {  changePasswordOTPVerificationController, deleteUserController, forgotPasswordController, getSingleUserController, logOutUserController, registerUserPhoneController, userLoginController, userRegisterController, verifyEmailController, verifyUserPhoneController } from "../controllers/user/userController";
+
+import {  changePasswordOTPVerificationController, createTransferPinController, deleteUserController, forgotPasswordController,    getBankAccountDetailsController,  getSingleUserController, logOutUserController, registerUserPhoneController, userLoginController, userRegisterController, verifyBankTransferPinController, verifyEmailController, verifyUserPhoneController } from "../controllers/user/userController";
 
 import { checkUserAuthMiddelware } from "../midleware/checkUserAuth";
 
 
 
 const express = require('express');
-
 const userRouter = express.Router();
 
 /* Auth Routes */
@@ -40,4 +40,23 @@ userRouter.get("/:id", checkUserAuthMiddelware, getSingleUserController)
 userRouter.delete("/delete/:id",checkUserAuthMiddelware,deleteUserController )
 
 
+
+// create payment  pin
+
+userRouter.post("/account/transferPinCreation", checkUserAuthMiddelware,createTransferPinController)
+
+
+// get ban details
+userRouter.get("/account/details", checkUserAuthMiddelware,getBankAccountDetailsController)
+
+
+//verify bank transfer pic
+
+userRouter.post("/account/tranferPinVerify", checkUserAuthMiddelware,verifyBankTransferPinController)
+
+
+
 export default userRouter
+
+
+/* getBankAccountDetails */

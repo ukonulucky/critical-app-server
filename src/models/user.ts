@@ -55,11 +55,17 @@ const userSchema = new mongoose.Schema<userSchemaInterface>(
         deviceType: {
             type: String,
             default: null
-    },
+      },
     url: {
       type: String,
       default: null
+    },
+    status: {
+      type: String,
+      enum: ["pending", "approved", "rejected", "suspended"],
+      default: "pending"
     }
+    
 
   },
 

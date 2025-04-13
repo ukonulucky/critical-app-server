@@ -8,14 +8,15 @@ export const TwilloPhoneOtpSender = async(option: twillioOptionType) => {
 
     const { 
         OTP,
-      receivingNumber
+        receivingNumber,
+      message
     } = option
     const client = twilio(accountSid, authToken);
     try {
  /* make api call to twillio to send phone otp */
         const response = await client.messages
             .create({
-                body: `online bank assessment phone verifcation code - ${OTP}`,
+                body: `online bank assessment ${message} - ${OTP}`,
                 to: receivingNumber, // Text your number
                 from: process.env.TWILIO_OTP_SENDING_PHONE_NUMBER // From a valid Twilio number
             })

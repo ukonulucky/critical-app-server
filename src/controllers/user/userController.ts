@@ -2,9 +2,10 @@ import expressAsyncHandler from "express-async-handler"
 import jwt from "jsonwebtoken"
 import {  Request, Response } from "express"
 
+
 import isValidObjectId from "../../helpers/mongooseIdValidity";
 import UserModel from "../../models/user";
-import { IGetUserAuthInfoRequest, registerType } from "../../appTypes/types";
+import { IGetUserAuthInfoRequest, registerType, userSchemaInterface } from "../../appTypes/types";
 import sendBrevoEmail from "../../helpers/mailsSender";
 import { TwilloPhoneOtpSender } from "../../helpers/sendPhoneOtp";
 import BankModel from "../../models/bank";
@@ -117,12 +118,34 @@ const isPasswordCorrect = await user.comparePassword(password);
 
   
  
-if ( !isPasswordCorrect) {
+  if (!isPasswordCorrect) {
+    if (user.failedLoginCount === 2) { 
+     await UserModel.findOneAndUpdate(
+        { email },
+        { status: "suspended"},
+        { new: true } // returns the updated document
+      );
+      throw new Error("Account suspended, please check your mail to activate account.")
+    }
+   await UserModel.findOneAndUpdate(
+      { email },
+     {
+       $inc: {
+         failedLoginCount: 1
+       }
+     },
+      { new: true } // returns the updated document
+    );
+ 
   throw new Error("Invalid login credential");
 }
 
 const { isEmailVerified, accountVerificationToken, fullName } = user;
  
+  if (!isEmailVerified) { 
+ throw new Error("Email not verified")
+  }
+  
 const { _id } = user;
 // set jwt token for the user
 const token = jwt.sign({ id: _id }, process.env.JWT_SECRET as string);
@@ -357,7 +380,8 @@ export const registerUserPhoneController = expressAsyncHandler(async (req: IGetU
   
  const response = await TwilloPhoneOtpSender({
     OTP: otp,
-    receivingNumber: phone
+   receivingNumber: phone,
+    message:"phone verifcation code"
   })
 
   res.status(200).json({
@@ -502,3 +526,121 @@ export const deleteUserController = expressAsyncHandler(async (req: IGetUserAuth
     data: deletedUser,
   });
 });
+
+
+export const 
+getBankAccountDetailsController = expressAsyncHandler(async (req: IGetUserAuthInfoRequest, res: Response) => { 
+
+  const id = req.user?._id
+
+  const getAccount = await BankModel.findOne({
+    userId: id?.toString() 
+  }).populate<{
+    userId: userSchemaInterface  // this tells typescript the type of values that is being populated at the userId field
+  }>("userId").exec()
+  
+  if (!getAccount) { 
+    throw new Error("No account found")
+  }
+  res.status(200).json({
+    status: "true",
+    message: "Account successfully fetched",
+    data: getAccount
+  })
+  
+})
+
+
+export const createTransferPinController = expressAsyncHandler(async(req:IGetUserAuthInfoRequest, res:Response) => { 
+  const id = req.user?._id
+  const { transferPin } = req.body
+  if (!transferPin) { 
+    throw new Error("Missing crredentials")
+  }
+  
+
+  const getAccount = await BankModel.findOne({
+    userId: id?.toString() 
+  }).populate<{
+    userId: userSchemaInterface  // this tells typescript the type of values that is being populated at the userId field
+  }>("userId").exec()
+  if (!getAccount) { 
+    res.status(404).json({
+      status: "false",
+      message: "Account not found"
+    })
+    return
+  }
+
+  // generate OTP
+  const getOtp = getAccount.createTransferPinVerificationOTP(transferPin)
+  // send otp to user phone
+  const phone = getAccount?.userId?.phone
+await getAccount.save()
+ await  TwilloPhoneOtpSender({
+    OTP: getOtp,
+   receivingNumber: phone,
+    message: "create transfer pin OTP"
+  })
+
+  res.status(200).json({
+    status: "true",
+    message: "Phone verification OTP sent, please verify",
+    data: getAccount
+  })
+  
+})
+
+
+
+export const verifyBankTransferPinController = expressAsyncHandler(async (req: IGetUserAuthInfoRequest, res: Response): Promise<void> => {
+  const id = req.user?._id
+  const { OTP } = req.body
+  if (!id || !OTP) { 
+    throw new Error("Missing crredentials")
+ }
+
+ 
+  const isIdVallid = isValidObjectId(id.toString());
+  if (!id || !isIdVallid) {
+     res.status(404).json({
+      status: "failed",
+      message: "Invaild id or id not found",
+     });
+      return
+  }
+
+ 
+  const account = await BankModel.findOne({
+    userId: id
+  })
+
+  if (!account) { 
+    res.status(404).json({
+      status: "false",
+      message: "Account not found"
+    })
+    return
+  }
+
+
+  const result = account.isTransferPinVerificationOTPValid(OTP)
+
+ await account.save()
+  if (!result) { 
+   throw new Error("Account verifcation pin expired or invalid. Please retry")
+      
+  }
+
+
+  res.status(200).json({
+    status: "true",
+    message: "Transfer pin created successfuly"
+  })
+ 
+});
+
+
+
+
+

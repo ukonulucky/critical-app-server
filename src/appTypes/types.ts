@@ -20,6 +20,7 @@ export interface userSchemaInterface extends Document {
     transferPin: String;
     phoneVerificationCode: String;
     isTransferPinVerified: String;
+    status: "pending" | "approved" |"rejected" | "suspended";
     createEmailVerificationToken: () => string; 
     comparePassword: (candidatePassword: string) => boolean;
     createPasswordResetCode: () => number;
@@ -79,7 +80,8 @@ export interface IGetUserAuthInfoRequest extends Request{
 
 export interface twillioOptionType { 
     OTP: number,
-    receivingNumber: string
+    receivingNumber: string,
+    message: string
 }
 
 
