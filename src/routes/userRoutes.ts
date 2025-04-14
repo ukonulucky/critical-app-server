@@ -1,5 +1,5 @@
 
-import {  changePasswordOTPVerificationController, createTransferPinController, deleteUserController, forgotPasswordController,    getBankAccountDetailsController,  getSingleUserController, logOutUserController, registerUserPhoneController, userLoginController, userRegisterController, verifyBankTransferPinController, verifyEmailController, verifyUserPhoneController } from "../controllers/user/userController";
+import {  changePasswordOTPVerificationController, createTransferPinController, deleteUserController, forgotPasswordController,    getBankAccountDetailsController,  getSingleUserController, logOutUserController, registerUserPhoneController, suspendedAccountActivation, userLoginController, userRegisterController, verifyBankTransferPinController, verifyEmailController, verifyUserPhoneController } from "../controllers/user/userController";
 
 import { checkUserAuthMiddelware } from "../midleware/checkUserAuth";
 
@@ -53,6 +53,12 @@ userRouter.get("/account/details", checkUserAuthMiddelware,getBankAccountDetails
 //verify bank transfer pic
 
 userRouter.post("/account/tranferPinVerify", checkUserAuthMiddelware,verifyBankTransferPinController)
+
+
+
+
+// activete suspended account
+userRouter.get("/account/suspended/activate/:id", suspendedAccountActivation)
 
 
 

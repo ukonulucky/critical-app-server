@@ -15,7 +15,7 @@ function fromBase64url(base64url: string): Buffer {
 
 
 export function decrypt(encryptedUrlSafe: string): string {
-    console.log("ran decrypt")
+   
    if(!encryptedUrlSafe) return ""
     if (!secretKey) throw new Error("No secretKey");
     const combined = fromBase64url(encryptedUrlSafe);

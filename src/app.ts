@@ -76,6 +76,7 @@ app.get("/emailVerify", async (req, res) => {
   res.render("emailVerification")
 })
 
+
 app.get("/", async(req, res) => { 
     res.render("accountVerification", {
         userName: "Samuel",

@@ -10,6 +10,8 @@ import sendBrevoEmail from "../../helpers/mailsSender";
 import { TwilloPhoneOtpSender } from "../../helpers/sendPhoneOtp";
 import BankModel from "../../models/bank";
 import { decrypt } from "../../helpers/decrypt";
+import { encrypt } from "../../helpers/encrypt";
+
 
 
 // register user controller
@@ -91,8 +93,6 @@ export const userRegisterController = expressAsyncHandler(async (req: Request<{}
   });
 });
 
-
-
 // login user
 export const userLoginController = expressAsyncHandler(async (req: Request<{}, {}, {
   email: string,
@@ -116,15 +116,54 @@ if (!user) {
 }
 const isPasswordCorrect = await user.comparePassword(password);
 
+const encryptedId = encrypt(user._id)
+ // check if user is suspended
+  if (user.status === "suspended") { 
+    await sendBrevoEmail(req, res, {
+      subject: "Failed Loging Attempt",
+      to: [
+        {
+          email,
+           name: user.fullName
+        }
+      ],
+      emailTemplate: "failedLoginTemplate",
+      mailData: {
+        companyName: "Online bank assessment",
+        userName: user.fullName,
+        link: `${process.env.SERVER_URL}/api/v1/user/account/suspended/activate/${encryptedId}`,
+         verificationCode: undefined
+      }
+
+    })
+    throw new Error("Account suspended, please check your mail to activate account.")
+  }
   
- 
   if (!isPasswordCorrect) {
     if (user.failedLoginCount === 2) { 
      await UserModel.findOneAndUpdate(
         { email },
         { status: "suspended"},
         { new: true } // returns the updated document
-      );
+     );
+    
+  await sendBrevoEmail(req, res, {
+        subject: "Failed Loging Attempt",
+        to: [
+          {
+            email,
+             name: user.fullName
+          }
+        ],
+        emailTemplate: "failedLoginTemplate",
+        mailData: {
+          companyName: "Online bank assessment",
+          userName: user.fullName,
+         link: `${process.env.SERVER_URL}/api/v1/user/account/suspended/activate/${encryptedId}`,
+           verificationCode: undefined
+        }
+
+      })
       throw new Error("Account suspended, please check your mail to activate account.")
     }
    await UserModel.findOneAndUpdate(
@@ -140,10 +179,45 @@ const isPasswordCorrect = await user.comparePassword(password);
   throw new Error("Invalid login credential");
 }
 
-const { isEmailVerified, accountVerificationToken, fullName } = user;
+const { isEmailVerified } = user;
  
   if (!isEmailVerified) { 
- throw new Error("Email not verified")
+      /* generate  token */
+  const emailVerificationToken = user.createEmailVerificationToken();
+  
+  const verifyEmailEndpoint =
+    process.env.SERVER_URL +
+    "/api/v1/user" +
+    "/emailVerify/" +
+    user.email +
+    "/" +
+    emailVerificationToken;
+
+
+ 
+  /* send email for verification */
+
+  const option = {
+    subject: "Activate Your Account!",
+    emailTemplate:"accountVerification",
+  
+    to: [
+      {
+        email: user.email,
+        name: user.fullName,
+      },
+    ],
+   
+    mailData: {
+      companyName: "online bank assessment",
+      userName: user.fullName,
+      link: verifyEmailEndpoint 
+    }
+  };
+
+ await sendBrevoEmail(req, res, option);
+
+ throw new Error("Email not verified, please check your mail to verify email")
   }
   
 const { _id } = user;
@@ -378,7 +452,7 @@ export const registerUserPhoneController = expressAsyncHandler(async (req: IGetU
   // send OTP to phone number
   console.log("otp sent", otp)
   
- const response = await TwilloPhoneOtpSender({
+  await TwilloPhoneOtpSender({
     OTP: otp,
    receivingNumber: phone,
     message:"phone verifcation code"
@@ -641,6 +715,44 @@ export const verifyBankTransferPinController = expressAsyncHandler(async (req: I
 });
 
 
+export const suspendedAccountActivation = expressAsyncHandler(async (req: IGetUserAuthInfoRequest, res: Response): Promise<void> => { 
+  const { id } = req.params
+
+  if (!id) throw new Error("Missing credentials")
+
+  const userId = decrypt(id)
+
+  const isIdVallid = isValidObjectId(userId.toString());  // check if userId is a valid mongoose id
+  if (!isIdVallid) {
+     res.status(404).json({
+      status: "failed",
+      message: "Invaild id or id not found",
+     });
+      return
+  }
+
+  
+  const user = await UserModel.findByIdAndUpdate(
+    userId, {
+      failedLoginCount: 0,
+      status: "approved"
+  },
+    {
+      new: true
+    }
+  )
+
+  if (!user) throw new Error("user does not exist")
+  res.render("suspendedAccountActivation", {
+    userName: user.fullName,
+    companyName: "Online bank assessment",
+    loginUrl:`${process.env.SERVER_URL}/api/v1/user/login`
+    
+  })
+  // send user an otp to verifiy user
+
+}
+)
 
 
 
