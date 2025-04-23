@@ -17,12 +17,11 @@ const sendBrevoEmail = async function (req:Request, res:Response, options: mailS
 
     const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
    
-/* 
-    console.log(" this is the html:", html) */
+
     try {
 
       const data = {
-        sender: { email: 'ukonulucky@gmail.com', name: mailData.companyName }, // { email: 'sender@example.com', name: 'Sender Name' }
+        sender: { email: 'fadoyint@gmail.com', name: mailData.companyName }, // { email: 'sender@example.com', name: 'Sender Name' }
         to:to, // [{ email: 'recipient@example.com', name: 'Recipient Name' }]
         subject: subject,
         htmlContent:html,
@@ -40,7 +39,8 @@ const sendBrevoEmail = async function (req:Request, res:Response, options: mailS
   
       console.log("Email sent:", response?.data);
     } catch (error) {
-        if (error instanceof Error) {
+      if (error instanceof Error) {
+          console.log("mail error: ",error)
             console.log("EMAIL ERR/BREVO::", error.message);
          
           } else {

@@ -129,7 +129,6 @@ userSchema.methods.createEmailVerificationToken = function (): String {
   // Set account verifcation token
   this.accountVerificationToken = emailToken;
 
-
   return emailToken;
 };
 

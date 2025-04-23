@@ -117,28 +117,7 @@ if (!user) {
 const isPasswordCorrect = await user.comparePassword(password);
 
 const encryptedId = encrypt(user._id)
- // check if user is suspended
-  if (user.status === "suspended") { 
-    await sendBrevoEmail(req, res, {
-      subject: "Failed Loging Attempt",
-      to: [
-        {
-          email,
-           name: user.fullName
-        }
-      ],
-      emailTemplate: "failedLoginTemplate",
-      mailData: {
-        companyName: "Online bank assessment",
-        userName: user.fullName,
-        link: `${process.env.SERVER_URL}/api/v1/user/account/suspended/activate/${encryptedId}`,
-         verificationCode: undefined
-      }
 
-    })
-    throw new Error("Account suspended, please check your mail to activate account.")
-  }
-  
   if (!isPasswordCorrect) {
     if (user.failedLoginCount === 2) { 
      await UserModel.findOneAndUpdate(
@@ -184,7 +163,7 @@ const { isEmailVerified } = user;
   if (!isEmailVerified) { 
       /* generate  token */
   const emailVerificationToken = user.createEmailVerificationToken();
-  
+  await user.save()
   const verifyEmailEndpoint =
     process.env.SERVER_URL +
     "/api/v1/user" +
@@ -194,7 +173,7 @@ const { isEmailVerified } = user;
     emailVerificationToken;
 
 
- 
+ console.log("generated emeil verify token", emailVerificationToken)
   /* send email for verification */
 
   const option = {
@@ -220,12 +199,36 @@ const { isEmailVerified } = user;
  throw new Error("Email not verified, please check your mail to verify email")
   }
   
+ // check if user is suspended
+ if (user.status === "suspended") { 
+  await sendBrevoEmail(req, res, {
+    subject: "Failed Loging Attempt",
+    to: [
+      {
+        email,
+         name: user.fullName
+      }
+    ],
+    emailTemplate: "failedLoginTemplate",
+    mailData: {
+      companyName: "Online bank assessment",
+      userName: user.fullName,
+      link: `${process.env.SERVER_URL}/api/v1/user/account/suspended/activate/${encryptedId}`,
+       verificationCode: undefined
+    }
+
+  })
+  throw new Error("Account suspended, please check your mail to activate account.")
+}
+
+
+
 const { _id } = user;
 // set jwt token for the user
 const token = jwt.sign({ id: _id }, process.env.JWT_SECRET as string);
 
 
-  console.log("this is the jwt:", process.env.JWT_SECRET)
+
 // set cookie
 
 res.cookie("token", token, {
@@ -235,7 +238,8 @@ res.cookie("token", token, {
   secure: false,
 });
 
- res.status(200).json({
+  res.status(200).json({
+   error: false,
   status: "success",
   message: "Login successful",
   user,
@@ -275,6 +279,7 @@ export const verifyEmailController = expressAsyncHandler(async (req: Request<{
   }
   foundUser.isEmailVerified = true;
   foundUser.accountVerificationToken = null;
+  foundUser.status = "approved"
   await foundUser.save();
   /* const url = process.env.CLIENT_URL + "/emailVerified"; */
   res.render("emailVerification")
@@ -344,12 +349,61 @@ res.status(401).json({
   /*  mailSender() */
   res.status(200).json({
     error: false,
+    status: "success",
     message: "Hi, a change password OTP has been sent to your mail",
+    data: {
+      userEmail
+    }
 
   });
 });
 
 export const changePasswordOTPVerificationController = expressAsyncHandler(async (req, res): Promise<void> => {
+  const { email, token } = req.body;
+  if (!email || !token) {
+    throw new Error("Missing credentials");
+  }
+
+  const foundUser = await UserModel.findOne({
+    email
+  });
+  if (!foundUser) {
+    res.status(401).json({
+   error: false,
+      status: false,
+      message: "user not found",
+ });
+      return 
+  }
+
+  /* check if token is valid */
+
+  const isTokenValid = foundUser.isPasswordResetTokenValid(token);
+
+  if (!isTokenValid) {
+    throw new Error("Incorrect or expired OTP");
+  }
+
+  foundUser.passwordResetExpires = null;
+  foundUser.passwordResetToken = null;
+
+  await foundUser.save();
+
+
+  res.status(200).json({
+    error: false,
+    status: "success",
+    message: "OTP verified successfully",
+    data: {
+      email: foundUser.email
+    }
+  });
+});
+
+
+
+
+export const changePasswordController = expressAsyncHandler(async (req, res): Promise<void> => {
   const { email, token, password } = req.body;
   if (!email || !token || !password) {
     throw new Error("Missing credentials");
@@ -411,6 +465,7 @@ export const changePasswordOTPVerificationController = expressAsyncHandler(async
     user: foundUser
   });
 });
+
 
 
 

@@ -19,7 +19,7 @@ userRouter.get("/logout", checkUserAuthMiddelware, logOutUserController)
 
 userRouter.get("/emailVerify/:email/:token", verifyEmailController)
 
-userRouter.post("/forgotPassword", forgotPasswordController)
+userRouter.post("/forgotPasswordOTPSender", forgotPasswordController)
 
 userRouter.post("/changePassword/OTPveirfy",changePasswordOTPVerificationController)
 
