@@ -19,12 +19,13 @@ export const userRegisterController = expressAsyncHandler(async (req: Request<{}
     const { 
         email,
         fullName,
-        password,
+      password,
+        phone,
         role
    } = req.body;
 
   // check if email and password are sent
-  if (!email || !password || !fullName ) {
+  if (!email || !password || !fullName  || !phone ) {
     throw new Error("Missing credentials");
   }
 
@@ -39,6 +40,7 @@ export const userRegisterController = expressAsyncHandler(async (req: Request<{}
   const registeredUser = await UserModel.create({
     password,
     email,
+    phone,
     fullName,
       role
   });
@@ -81,10 +83,9 @@ export const userRegisterController = expressAsyncHandler(async (req: Request<{}
     }
   };
 
-  sendBrevoEmail(req, res, option);
+ await sendBrevoEmail(req, res, option);
 
  
-
    res.status(201).json({
     status: "success",
     message: "Account created, please verify your email",
@@ -242,7 +243,8 @@ res.cookie("token", token, {
    error: false,
   status: "success",
   message: "Login successful",
-  user,
+    user,
+  token
 });
 });
 
@@ -297,7 +299,7 @@ export const logOutUserController = expressAsyncHandler(async (req, res): Promis
   });
 });
 
-/* forgot password */
+/* controller to generate an OTP to be sent to the users email for passsword update */
 
 export const forgotPasswordController = expressAsyncHandler(async (req, res): Promise<void> => {
   const { email } = req.body;
@@ -345,7 +347,7 @@ res.status(401).json({
     }
   };
 
-   sendBrevoEmail(req, res, option);
+   await sendBrevoEmail(req, res, option);
   /*  mailSender() */
   res.status(200).json({
     error: false,
@@ -358,6 +360,8 @@ res.status(401).json({
   });
 });
 
+
+// controller to verify the otp sent to the users email for password change
 export const changePasswordOTPVerificationController = expressAsyncHandler(async (req, res): Promise<void> => {
   const { email, token } = req.body;
   if (!email || !token) {
@@ -386,6 +390,7 @@ export const changePasswordOTPVerificationController = expressAsyncHandler(async
 
   foundUser.passwordResetExpires = null;
   foundUser.passwordResetToken = null;
+  foundUser.isPasswordForgetOtpVerified = true;
 
   await foundUser.save();
 
@@ -402,10 +407,10 @@ export const changePasswordOTPVerificationController = expressAsyncHandler(async
 
 
 
-
+// controller to change the users password to the new password
 export const changePasswordController = expressAsyncHandler(async (req, res): Promise<void> => {
-  const { email, token, password } = req.body;
-  if (!email || !token || !password) {
+  const { email, password } = req.body;
+  if (!email || !password) {
     throw new Error("Missing credentials");
   }
 
@@ -420,18 +425,17 @@ export const changePasswordController = expressAsyncHandler(async (req, res): Pr
       return 
   }
 
-  /* generate 5 digit code */
+  /*  check if the otp sent to the user has been verified */
 
-  const isTokenValid = foundUser.isPasswordResetTokenValid(token);
-
-  if (!isTokenValid) {
-    throw new Error("Incorrect or expired OTP");
+  if (!foundUser.isPasswordForgetOtpVerified) { 
+    throw new Error("Password reset OTP not verified");
   }
 
+
+  //  set all fields to its default state after changing the password
   const { email: emailSaved, fullName } = foundUser;
   foundUser.password = password;
-  foundUser.passwordResetExpires = null;
-  foundUser.passwordResetToken = null;
+  foundUser.isPasswordForgetOtpVerified = false;
 
   await foundUser.save();
 
@@ -462,7 +466,6 @@ export const changePasswordController = expressAsyncHandler(async (req, res): Pr
     error: false,
     status: true,
     message: "Password updated successfully",
-    user: foundUser
   });
 });
 
@@ -472,13 +475,12 @@ export const changePasswordController = expressAsyncHandler(async (req, res): Pr
 export const registerUserPhoneController = expressAsyncHandler(async (req: IGetUserAuthInfoRequest, res: Response): Promise<void> => {
  
 
-  const { id } = req.params
-  const decryptedId = decrypt(id)
+  const id = req.user?._id
   const { phone } = req.body
-  console.log("decrypted id  from phone:", decryptedId)
+  
 
-  const isIdVallid = isValidObjectId(decryptedId.toString());
-  if (!decryptedId || !isIdVallid) {
+  const isIdVallid = id && isValidObjectId(id.toString());
+  if (!id || !isIdVallid) {
      res.status(404).json({
       status: "failed",
       message: "Invaild id or id not found",
@@ -486,10 +488,10 @@ export const registerUserPhoneController = expressAsyncHandler(async (req: IGetU
       return
   }
   if (!phone) { 
-     throw new Error("Missing crredentials")
+     throw new Error("Missing credentials")
   }
 
-  const user = await UserModel.findById(decryptedId)
+  const user = await UserModel.findById(id)
 
   if (!user) { 
     res.status(404).json({
@@ -523,14 +525,14 @@ export const registerUserPhoneController = expressAsyncHandler(async (req: IGetU
 
 
 export const verifyUserPhoneController = expressAsyncHandler(async (req:IGetUserAuthInfoRequest, res:Response): Promise<void> => {
-  const { id } = req.params
+  const id = req.user?._id
   const { OTP } = req.body
   if (!id || !OTP) { 
     throw new Error("Missing crredentials")
  }
 
-  const decryptedId = decrypt(id)
-  const isIdVallid = isValidObjectId(decryptedId.toString());
+ 
+  const isIdVallid = isValidObjectId(id.toString());
   if (!id || !isIdVallid) {
      res.status(404).json({
       status: "failed",
@@ -540,7 +542,7 @@ export const verifyUserPhoneController = expressAsyncHandler(async (req:IGetUser
   }
 
  
-  const user = await UserModel.findById(decryptedId)
+  const user = await UserModel.findById(id)
 
   if (!user) { 
     res.status(404).json({
@@ -557,7 +559,7 @@ export const verifyUserPhoneController = expressAsyncHandler(async (req:IGetUser
   if (!result) { 
     res.status(400).json({
       status: "false",
-      message: "Incorrect or Invalid Otp... please retry"
+      message: "Incorrect or Invalid Otp. Please retry"
     }
       
     )
@@ -575,9 +577,9 @@ export const verifyUserPhoneController = expressAsyncHandler(async (req:IGetUser
   if (!accountSave) { 
   throw new Error("Error occured in account creation, please retry phonenumber verification")
   }
-  console.log("created account", accountSave)
+
   res.status(200).json({
-    status: "true",
+    status: "success",
     message: "Phone number successfully verified and account created successfuly"
   })
  

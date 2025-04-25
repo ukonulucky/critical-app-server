@@ -20,6 +20,7 @@ export interface userSchemaInterface extends Document {
     transferPin: String;
     phoneVerificationCode: String;
     isTransferPinVerified: String;
+    isPasswordForgetOtpVerified: Boolean,
     status: "pending" | "approved" |"rejected" | "suspended";
     createEmailVerificationToken: () => string; 
     comparePassword: (candidatePassword: string) => boolean;
@@ -57,6 +58,7 @@ export interface registerType  {
     fullName: string;
     password: string;
     email: string;
+    phone: string;
     role?: string
 }
 

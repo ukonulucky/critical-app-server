@@ -1,5 +1,5 @@
 
-import {  changePasswordOTPVerificationController, createTransferPinController, deleteUserController, forgotPasswordController,    getBankAccountDetailsController,  getSingleUserController, logOutUserController, registerUserPhoneController, suspendedAccountActivation, userLoginController, userRegisterController, verifyBankTransferPinController, verifyEmailController, verifyUserPhoneController } from "../controllers/user/userController";
+import {  changePasswordController, changePasswordOTPVerificationController, createTransferPinController, deleteUserController, forgotPasswordController,    getBankAccountDetailsController,  getSingleUserController, logOutUserController, registerUserPhoneController, suspendedAccountActivation, userLoginController, userRegisterController, verifyBankTransferPinController, verifyEmailController, verifyUserPhoneController } from "../controllers/user/userController";
 
 import { checkUserAuthMiddelware } from "../midleware/checkUserAuth";
 
@@ -19,15 +19,20 @@ userRouter.get("/logout", checkUserAuthMiddelware, logOutUserController)
 
 userRouter.get("/emailVerify/:email/:token", verifyEmailController)
 
+// send user email for password change
 userRouter.post("/forgotPasswordOTPSender", forgotPasswordController)
 
+// verify OTP sent for password chnage
 userRouter.post("/changePassword/OTPveirfy",changePasswordOTPVerificationController)
 
-userRouter.post("/registerPhone/:id",checkUserAuthMiddelware, registerUserPhoneController)
 
-userRouter.post("/verifyPhone/:id",checkUserAuthMiddelware, verifyUserPhoneController)
+// update the password with the new password sent
+userRouter.post("/reset-password", changePasswordController)
 
 
+userRouter.post("/registerPhone",checkUserAuthMiddelware, registerUserPhoneController)
+
+userRouter.post("/verifyPhone",checkUserAuthMiddelware, verifyUserPhoneController)
 
 
 /* User Routes */

@@ -9,7 +9,11 @@ import { IGetUserAuthInfoRequest } from "../appTypes/types";
 
 
 export const checkUserAuthMiddelware = async (req: IGetUserAuthInfoRequest, res:Response, next:NextFunction): Promise<void> => { 
-    const userJwt = req.cookies?.token
+   // const userJwt = req.cookies?.token
+
+    const userJwt = req.header('Authorization')?.split(' ')[1]; // Get the token from 'Bearer <token>'
+
+   
    
     if (!userJwt) { 
 

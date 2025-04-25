@@ -39,6 +39,10 @@ const userSchema = new mongoose.Schema<userSchemaInterface>(
       type: Boolean,
       default: false,
     },
+    isPasswordForgetOtpVerified: {
+      type: Boolean,
+      default: false
+    },
     role: {
       type: String,
       default: "user",
