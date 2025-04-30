@@ -6,11 +6,11 @@ import {  Request, Response } from "express"
 import isValidObjectId from "../../helpers/mongooseIdValidity";
 import UserModel from "../../models/user";
 import { IGetUserAuthInfoRequest, registerType, userSchemaInterface } from "../../appTypes/types";
-import sendBrevoEmail from "../../helpers/mailsSender";
 import { TwilloPhoneOtpSender } from "../../helpers/sendPhoneOtp";
 import BankModel from "../../models/bank";
 import { decrypt } from "../../helpers/decrypt";
 import { encrypt } from "../../helpers/encrypt";
+import sendMailjetEmail from "../../helpers/mailjetSendMail";
 
 
 
@@ -83,7 +83,7 @@ export const userRegisterController = expressAsyncHandler(async (req: Request<{}
     }
   };
 
- await sendBrevoEmail(req, res, option);
+ await sendMailjetEmail(req, res, option);
 
  
    res.status(201).json({
@@ -127,7 +127,7 @@ const encryptedId = encrypt(user._id)
         { new: true } // returns the updated document
      );
     
-  await sendBrevoEmail(req, res, {
+  await sendMailjetEmail(req, res, {
         subject: "Failed Loging Attempt",
         to: [
           {
@@ -195,14 +195,32 @@ const { isEmailVerified } = user;
     }
   };
 
- await sendBrevoEmail(req, res, option);
+ await sendMailjetEmail(req, res, option);
 
  throw new Error("Email not verified, please check your mail to verify email")
   }
   
  // check if user is suspended
- if (user.status === "suspended") { 
-  await sendBrevoEmail(req, res, {
+  if (user.status === "suspended") { 
+    console.log("code ran here")
+    await sendMailjetEmail(req, res, {
+      subject: "Failed Loging Attempt",
+      to: [
+        {
+          email,
+           name: user.fullName
+        }
+      ],
+      emailTemplate: "failedLoginTemplate",
+      mailData: {
+        companyName: "Online bank assessment",
+        userName: user.fullName,
+        link: `${process.env.SERVER_URL}/api/v1/user/account/suspended/activate/${encryptedId}`,
+         verificationCode: undefined
+      }
+  
+    })
+  /* await sendBrevoEmail(req, res, {
     subject: "Failed Loging Attempt",
     to: [
       {
@@ -218,7 +236,7 @@ const { isEmailVerified } = user;
        verificationCode: undefined
     }
 
-  })
+  }) */
   throw new Error("Account suspended, please check your mail to activate account.")
 }
 
@@ -355,7 +373,7 @@ res.status(401).json({
     }
   };
 
-   await sendBrevoEmail(req, res, option);
+   await sendMailjetEmail(req, res, option);
   /*  mailSender() */
   res.status(200).json({
     error: false,
@@ -466,7 +484,7 @@ export const changePasswordController = expressAsyncHandler(async (req, res): Pr
     }
   };
 
-   sendBrevoEmail(req, res, option);
+  sendMailjetEmail(req, res, option);
 
   /* sendBrevoEmail(option); */
 
@@ -773,7 +791,7 @@ export const verifyBankTransferPinController = expressAsyncHandler(async (req: I
 
 
   res.status(200).json({
-    status: "true",
+    status: "success",
     message: "Transfer pin created successfuly"
   })
  

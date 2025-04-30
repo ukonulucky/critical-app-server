@@ -86,8 +86,7 @@ bankSchema.methods.createTransferPinVerificationOTP = function (transferPin: num
 
 
 bankSchema.methods.isTransferPinVerificationOTPValid = function (OTP: number): boolean { 
-    const result = this.transferPinVerificationCode === OTP
-
+    const result = this.transferPinVerificationCode.toString() === OTP.toString()
     if (result) {
         this.isTransferPinVerified = true
         return true

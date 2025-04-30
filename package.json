@@ -24,6 +24,7 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.13.1",
+    "node-mailjet": "^6.0.8",
     "twilio": "^5.5.1"
   },
   "devDependencies": {
