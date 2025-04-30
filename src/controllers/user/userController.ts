@@ -174,7 +174,7 @@ const { isEmailVerified } = user;
     emailVerificationToken;
 
 
- console.log("generated emeil verify token", emailVerificationToken)
+
   /* send email for verification */
 
   const option = {
@@ -228,6 +228,13 @@ const { _id } = user;
 // set jwt token for the user
 const token = jwt.sign({ id: _id }, process.env.JWT_SECRET as string);
 
+  
+  // get user bank details if account is verified
+
+  const bankData = await BankModel.findOne({
+    userId: _id
+  })
+  
 
 
 // set cookie
@@ -244,6 +251,7 @@ res.cookie("token", token, {
   status: "success",
   message: "Login successful",
     user,
+    bankData : bankData && bankData.accountNumber ? bankData : null,
   token
 });
 });
@@ -715,7 +723,7 @@ await getAccount.save()
   })
 
   res.status(200).json({
-    status: "true",
+    status: "success",
     message: "Phone verification OTP sent, please verify",
     data: getAccount
   })
