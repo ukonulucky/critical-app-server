@@ -14,8 +14,6 @@ import adminRouter from "./routes/adminRoutes"
 
 
 
-
-
 const app = express()
 
 const PORT = process.env.PORT || 5000;
@@ -44,10 +42,10 @@ app.set("view engine", "hbs") // instruct the view engine to search for any file
 app.set("views", path.join(__dirname, "views"))  // instruct express to search for the views folder at path ./views
 
 //Middleware
-
+app.use(cors(corsOptions))
 app.use(cookieParser())
 app.use(express.json())
-app.use(cors(corsOptions))
+
 
 
 // limts the number of api call from a giving browser 
@@ -57,10 +55,6 @@ const limiter = rateLimit({
   });
   app.use(limiter);
   
-
-
-
-
 // Routes
 
 /* app.use("/api/v1/admin", adminRouter) */
