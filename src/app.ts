@@ -70,7 +70,12 @@ app.get("/emailVerify", async (req, res) => {
 })
 
 
-app.get("/", async(req, res) => { 
+app.get("/test", async (req, res) => { 
+    res.send("server running")
+})
+
+app.get("/", async (req, res) => { 
+    console.log("ran here")
     res.render("accountVerification", {
         userName: "Samuel",
         companyName: "Online banking",
