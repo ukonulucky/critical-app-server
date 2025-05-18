@@ -41,7 +41,7 @@ app.engine("hbs", (0, express_handlebars_1.engine)({
     /*    defaultLayout: false // <- disables layout */
 })); // instruct express to use engine as the remplating engine for any file ending in .hbs
 app.set("view engine", "hbs"); // instruct the view engine to search for any file ending with hbs to render to the screeen
-app.set("views", path_1.default.join(__dirname, "views")); // instruct express to search for the views folder at path ./views
+app.set("views", path_1.default.join(__dirname, "..", "src", "views")); // instruct express to search for the views folder at path ./views
 //Middleware
 app.use((0, cors_1.default)(corsOptions));
 app.use((0, cookie_parser_1.default)());

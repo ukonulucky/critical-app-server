@@ -45,7 +45,7 @@ app.engine("hbs", engine({
 
 app.set("view engine", "hbs") // instruct the view engine to search for any file ending with hbs to render to the screeen
  
-app.set("views", path.join(__dirname, "views"))  // instruct express to search for the views folder at path ./views
+app.set("views", path.join(__dirname,"..", "src","views"))  // instruct express to search for the views folder at path ./views
 
 //Middleware
 app.use(cors(corsOptions))
