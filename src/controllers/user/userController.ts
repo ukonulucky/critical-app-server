@@ -58,9 +58,7 @@ export const userRegisterController = expressAsyncHandler(async (req: Request<{}
     createdEmail +
     "/" +
     emailVerificationToken;
-  const message =
-    "Please click here " + verifyEmailEndpoint + " to verify your email";
- console.log("email token created", emailVerificationToken)
+
 
   await registeredUser.save();
   /* send email for verification */
@@ -90,7 +88,7 @@ export const userRegisterController = expressAsyncHandler(async (req: Request<{}
     status: "success",
     message: "Account created, please verify your email",
     data: registeredUser,
-    meta: message
+  
   });
 });
 
@@ -326,7 +324,6 @@ export const logOutUserController = expressAsyncHandler(async (req, res): Promis
 });
 
 /* controller to generate an OTP to be sent to the users email for passsword update */
-
 export const forgotPasswordController = expressAsyncHandler(async (req, res): Promise<void> => {
   const { email } = req.body;
   if (!email) {
