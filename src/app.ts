@@ -12,6 +12,12 @@ import connectDb from "./config/dbConnect";
 import userRouter from "./routes/userRoutes";
 import adminRouter from "./routes/adminRoutes"
 
+import requestIp from "request-ip"
+import geoip from "geoip-lite"
+import useragent from "useragent"
+import { UserInfo } from "./appTypes/types"
+
+
 
 
 const app = express()
@@ -75,7 +81,7 @@ app.get("/test", async (req, res) => {
 })
 
 app.get("/", async (req, res) => { 
-    console.log("ran here")
+    
     res.render("accountVerification", {
         userName: "Samuel",
         companyName: "Online banking",
@@ -84,6 +90,39 @@ app.get("/", async (req, res) => {
     })
 })
 /* TwilloPhoneOtpSender()  */
+
+
+app.post('/api/user-info', (req: Request, res: Response) => {
+    // Get IP address
+    console.log("user info",req.body)
+    const ip = req.clientIp || '';
+  
+    // Get location info from IP
+    const geo = geoip.lookup(ip);
+  
+    // Get user-agent info
+    const ua = useragent.parse(req.headers['user-agent'] || '');
+  
+    // Build response
+    const userInfo: UserInfo = {
+      ip,
+      location: {
+        city: geo?.city || null,
+        region: geo?.region || null,
+        country: geo?.country || null,
+        ll: geo?.ll || [],
+      },
+      device: {
+        browser: ua.family,
+        os: ua.os.toString(),
+        device: ua.device.toString(),
+      },
+    };
+  
+    res.json(userInfo);
+  });
+  
+
 
 app.use((req: Request, res:Response, next:NextFunction) => {
     res.status(404).json({

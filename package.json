@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon --exec ts-node src/app.ts",
+    "start": "node dist/app.js",
     "build": "tsc",
-    "serve": "node dist/app.js"
+    "serve": "nodemon --exec ts-node src/app.ts"
   },
   "keywords": [],
   "author": "",
@@ -21,18 +21,24 @@
     "express-async-handler": "^1.2.0",
     "express-handlebars": "^8.0.1",
     "express-rate-limit": "^7.5.0",
+    "geoip-lite": "^1.4.10",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.13.1",
     "node-mailjet": "^6.0.8",
-    "twilio": "^5.5.1"
+    "request-ip": "^3.3.0",
+    "twilio": "^5.5.1",
+    "useragent": "^2.3.0"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.8",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
+    "@types/geoip-lite": "^1.4.4",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.14.0",
+    "@types/request-ip": "^0.0.41",
+    "@types/useragent": "^2.3.4",
     "nodemon": "^3.1.9",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2"

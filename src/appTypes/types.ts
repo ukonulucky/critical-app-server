@@ -112,3 +112,18 @@ export interface bankSchemaType {
 
 
 }
+
+export interface UserInfo {
+    ip: string;
+    location: {
+      city: string | null;
+      region: string | null;
+      country: string | null;
+      ll: number[]; // [latitude, longitude]
+    };
+    device: {
+      browser: string;
+      os: string;
+      device: string;
+    };
+  }
