@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
-    "start": "node dist/app.js",
+    "start": "nodemon --exec ts-node src/app.ts",
     "build": "tsc",
-    "serve": "nodemon --exec ts-node src/app.ts",
+    "serve": "node dist/app.js",
      "heroku-postbuild": "npm run build"
   },
   "keywords": [],
