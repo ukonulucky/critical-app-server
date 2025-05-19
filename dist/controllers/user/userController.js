@@ -79,6 +79,7 @@ exports.userRegisterController = (0, express_async_handler_1.default)((req, res)
 // login user
 exports.userLoginController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     /* find user  */
+    console.log("body sent:", req.body);
     const { email, password } = req.body;
     // check if email and password are sent
     if (!email || !password) {
@@ -100,7 +101,6 @@ exports.userLoginController = (0, express_async_handler_1.default)((req, res) =>
                 return;
             const { location: { regionName }, time, ipAddress, status } = yield (0, checkUserIp_1.getUserIpFunc)(req.clientIp);
             if (status !== "success") {
-                console.log("location data :", location);
                 throw new Error("Failed to obtain user ip");
             }
             yield (0, mailjetSendMail_1.default)(req, res, {

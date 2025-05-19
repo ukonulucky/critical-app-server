@@ -16,8 +16,21 @@ exports.getUserIpFunc = void 0;
 const axios_1 = __importDefault(require("axios"));
 const getUserIpFunc = (ip) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        console.log("ipInput", ip);
         const response = yield axios_1.default.get(`http://ip-api.com/json/${ip}`);
         const ipdata = response.data;
+        console.log("ipdata", ipdata);
+        if (ipdata.status === "fail") {
+            return {
+                time: Date.now().toString(),
+                ipAddress: "",
+                location: {
+                    country: "",
+                    regionName: ""
+                },
+                status: ipdata.status
+            };
+        }
         return {
             time: Date.now().toString(),
             ipAddress: ipdata.Ip,
