@@ -98,7 +98,11 @@ exports.userLoginController = (0, express_async_handler_1.default)((req, res) =>
             );
             if (!req.clientIp)
                 return;
-            const { location: { regionName }, time, ipAddress } = yield (0, checkUserIp_1.getUserIpFunc)(req.clientIp);
+            const { location: { regionName }, time, ipAddress, status } = yield (0, checkUserIp_1.getUserIpFunc)(req.clientIp);
+            if (status !== "success") {
+                console.log("location data :", location);
+                throw new Error("Failed to obtain user ip");
+            }
             yield (0, mailjetSendMail_1.default)(req, res, {
                 subject: "Failed Loging Attempt",
                 to: [
@@ -162,7 +166,10 @@ exports.userLoginController = (0, express_async_handler_1.default)((req, res) =>
     if (user.status === "suspended") {
         if (!req.clientIp)
             return;
-        const { location: { regionName }, time, ipAddress } = yield (0, checkUserIp_1.getUserIpFunc)(req.clientIp);
+        const { location: { regionName }, time, ipAddress, status } = yield (0, checkUserIp_1.getUserIpFunc)(req.clientIp);
+        if (status !== "success") {
+            throw new Error("Failed to obtain user ip");
+        }
         yield (0, mailjetSendMail_1.default)(req, res, {
             subject: "Failed Loging Attempt",
             to: [

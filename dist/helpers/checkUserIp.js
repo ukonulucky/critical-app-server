@@ -24,7 +24,8 @@ const getUserIpFunc = (ip) => __awaiter(void 0, void 0, void 0, function* () {
             location: {
                 country: ipdata.location.country,
                 regionName: ipdata.location.regionName
-            }
+            },
+            status: ipdata.location.status
         };
     }
     catch (error) {

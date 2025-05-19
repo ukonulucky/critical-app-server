@@ -129,8 +129,11 @@ const encryptedId = encrypt(user._id)
       if(!req.clientIp) return
       const { location: { 
         regionName
-      }, time, ipAddress} =    await  getUserIpFunc(req.clientIp)
- 
+      }, time, ipAddress, status} =    await  getUserIpFunc(req.clientIp)
+      if (status !== "success") { 
+        console.log("location data :",location)
+        throw new Error("Failed to obtain user ip")
+    }
   await sendMailjetEmail(req, res, {
         subject: "Failed Loging Attempt",
         to: [
@@ -214,8 +217,10 @@ const { isEmailVerified } = user;
     if(!req.clientIp) return
     const { location: { 
       regionName
-    }, time, ipAddress} =    await  getUserIpFunc(req.clientIp)
-
+    }, time, ipAddress, status} =    await  getUserIpFunc(req.clientIp)
+    if (status !== "success") { 
+        throw new Error("Failed to obtain user ip")
+    }
 await sendMailjetEmail(req, res, {
       subject: "Failed Loging Attempt",
       to: [

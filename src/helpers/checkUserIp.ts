@@ -16,7 +16,8 @@ export const getUserIpFunc = async (ip:string): Promise<IpAddressInfo> => {
             location: {
                 country: ipdata.location.country,
                 regionName: ipdata.location.regionName
-            }
+               },
+            status: ipdata.location.status
           }
       
     

@@ -138,5 +138,6 @@ export interface IpAddressInfo {
     location: {
         country: string,
         regionName: string
-    }
+    },
+    status: string
 }
