@@ -48,7 +48,7 @@ app.get('/ip', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const location = response.data;
         res.json({
             ip,
-            location
+            location: location.regionName
         });
     }
     catch (error) {
