@@ -1,5 +1,6 @@
 import { IpAddressInfo } from "../appTypes/types";
 import axios from "axios"
+import { timeFormaterFunc } from "./timeFormater";
 
 export const getUserIpFunc = async (ip: string): Promise<IpAddressInfo> => {
   try {
@@ -11,7 +12,7 @@ export const getUserIpFunc = async (ip: string): Promise<IpAddressInfo> => {
 
     if (ipdata.status === "fail") {
       return {
-        time: Date.now().toString(),
+        time: timeFormaterFunc(),
         ipAddress: "",
         location: {
           country: "",
@@ -22,7 +23,7 @@ export const getUserIpFunc = async (ip: string): Promise<IpAddressInfo> => {
     }
 
     return {
-      time: Date.now().toString(),
+      time: timeFormaterFunc(),
       ipAddress: ipdata.query, // correct field for IP
       location: {
         country: ipdata.country,
