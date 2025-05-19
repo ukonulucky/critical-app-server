@@ -19,10 +19,12 @@ const cors_1 = __importDefault(require("cors"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const express_handlebars_1 = require("express-handlebars");
 const path_1 = __importDefault(require("path"));
+const axios_1 = __importDefault(require("axios"));
 dotenv_1.default.config();
 const dbConnect_1 = __importDefault(require("./config/dbConnect"));
 const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
 const adminRoutes_1 = __importDefault(require("./routes/adminRoutes"));
+const request_ip_1 = __importDefault(require("request-ip"));
 const geoip_lite_1 = __importDefault(require("geoip-lite"));
 const useragent_1 = __importDefault(require("useragent"));
 const app = (0, express_1.default)();
@@ -33,12 +35,29 @@ const corsOptions = {
     methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
     credentials: true, // Enable credentials (cookies, authorization headers, etc.)
 };
+// Middleware to get IP
+app.use(request_ip_1.default.mw());
 /* set static files location */
 app.use(express_1.default.static(path_1.default.join(__dirname, "public")));
 /* view engine setting */
+app.get('/ip', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const ip = req.clientIp;
+    try {
+        // Replace with your preferred IP geolocation API
+        const response = yield axios_1.default.get(`http://ip-api.com/json/${ip}`);
+        const location = response.data;
+        res.json({
+            ip,
+            location
+        });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to fetch location' });
+    }
+}));
 app.engine("hbs", (0, express_handlebars_1.engine)({
     extname: '.hbs',
-    /*    defaultLayout: false // <- disables layout */
+    defaultLayout: false // <- disables layout
 })); // instruct express to use engine as the remplating engine for any file ending in .hbs
 app.set("view engine", "hbs"); // instruct the view engine to search for any file ending with hbs to render to the screeen
 app.set("views", path_1.default.join(__dirname, "views")); // instruct express to search for the views folder at path ./views

@@ -6,6 +6,7 @@ import cors from "cors"
 import rateLimit from "express-rate-limit"
 import { engine } from "express-handlebars"
 import path from "path"
+import axios from "axios"
 dotenv.config()
 
 import connectDb from "./config/dbConnect";
@@ -32,15 +33,36 @@ const corsOptions = {
     credentials: true, // Enable credentials (cookies, authorization headers, etc.)
 }
 
+// Middleware to get IP
+app.use(requestIp.mw());
 
  /* set static files location */
 app.use(express.static(path.join(__dirname,"public")))
 
 /* view engine setting */
 
+app.get('/ip', async (req, res) => {
+    const ip = req.clientIp;
+  
+    try {
+      // Replace with your preferred IP geolocation API
+      const response = await axios.get(`http://ip-api.com/json/${ip}`);
+      const location = response.data;
+  
+      res.json({
+        ip,
+        location
+      });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch location' });
+    }
+  });
+
+
+
 app.engine("hbs", engine({
     extname: '.hbs',
- /*    defaultLayout: false // <- disables layout */
+    defaultLayout: false // <- disables layout
   }))  // instruct express to use engine as the remplating engine for any file ending in .hbs
 
 app.set("view engine", "hbs") // instruct the view engine to search for any file ending with hbs to render to the screeen

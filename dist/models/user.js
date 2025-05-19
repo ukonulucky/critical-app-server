@@ -104,6 +104,10 @@ const userSchema = new mongoose_1.default.Schema({
         type: String,
         default: null
     },
+    userIpAddress: {
+        type: String,
+        default: null
+    },
     status: {
         type: String,
         enum: ["pending", "approved", "rejected", "suspended"],

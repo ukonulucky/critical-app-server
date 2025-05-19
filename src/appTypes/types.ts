@@ -21,6 +21,7 @@ export interface userSchemaInterface extends Document {
     phoneVerificationCode: String;
     isTransferPinVerified: String;
     isPasswordForgetOtpVerified: Boolean,
+    userIpAddress: String | null
     status: "pending" | "approved" |"rejected" | "suspended";
     createEmailVerificationToken: () => string; 
     comparePassword: (candidatePassword: string) => boolean;
