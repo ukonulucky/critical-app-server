@@ -50,8 +50,7 @@ app.get('/ip', async (req, res) => {
       const location = response.data;
   
       res.json({
-        ip,
-       location: location.regionName
+        location
       });
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch location' });
