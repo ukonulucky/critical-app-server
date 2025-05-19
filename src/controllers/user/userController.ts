@@ -99,7 +99,8 @@ export const userLoginController = expressAsyncHandler(async (req: Request<{}, {
   email: string,
   password: string
 }>, res: Response): Promise<void> => {
-/* find user  */
+  /* find user  */
+  console.log("body sent:", req.body)
   const { email, password } = req.body;
   
  
@@ -131,7 +132,6 @@ const encryptedId = encrypt(user._id)
         regionName
       }, time, ipAddress, status} =    await  getUserIpFunc(req.clientIp)
       if (status !== "success") { 
-        console.log("location data :",location)
         throw new Error("Failed to obtain user ip")
     }
   await sendMailjetEmail(req, res, {
