@@ -11,6 +11,8 @@ import BankModel from "../../models/bank";
 import { decrypt } from "../../helpers/decrypt";
 import { encrypt } from "../../helpers/encrypt";
 import sendMailjetEmail from "../../helpers/mailjetSendMail";
+import { getUserIpFunc } from "../../helpers/checkUserIp";
+import { time } from "console";
 
 
 
@@ -124,7 +126,11 @@ const encryptedId = encrypt(user._id)
         { status: "suspended"},
         { new: true } // returns the updated document
      );
-    
+      if(!req.clientIp) return
+      const { location: { 
+        regionName
+      }, time, ipAddress} =    await  getUserIpFunc(req.clientIp)
+ 
   await sendMailjetEmail(req, res, {
         subject: "Failed Loging Attempt",
         to: [
@@ -134,11 +140,15 @@ const encryptedId = encrypt(user._id)
           }
         ],
         emailTemplate: "failedLoginTemplate",
-        mailData: {
+    mailData: {
+      
           companyName: "Online bank assessment",
           userName: user.fullName,
          link: `${process.env.SERVER_URL}/api/v1/user/account/suspended/activate/${encryptedId}`,
-           verificationCode: undefined
+          verificationCode: undefined,
+          attemptTime:time,
+          ipAddress: ipAddress,
+          location: regionName
         }
 
       })
@@ -200,8 +210,13 @@ const { isEmailVerified } = user;
   
  // check if user is suspended
   if (user.status === "suspended") { 
-    console.log("code ran here")
-    await sendMailjetEmail(req, res, {
+
+    if(!req.clientIp) return
+    const { location: { 
+      regionName
+    }, time, ipAddress} =    await  getUserIpFunc(req.clientIp)
+
+await sendMailjetEmail(req, res, {
       subject: "Failed Loging Attempt",
       to: [
         {
@@ -210,13 +225,17 @@ const { isEmailVerified } = user;
         }
       ],
       emailTemplate: "failedLoginTemplate",
-      mailData: {
+  mailData: {
+    
         companyName: "Online bank assessment",
         userName: user.fullName,
-        link: `${process.env.SERVER_URL}/api/v1/user/account/suspended/activate/${encryptedId}`,
-         verificationCode: undefined
+       link: `${process.env.SERVER_URL}/api/v1/user/account/suspended/activate/${encryptedId}`,
+        verificationCode: undefined,
+        attemptTime:time,
+        ipAddress: ipAddress,
+        location: regionName
       }
-  
+
     })
   /* await sendBrevoEmail(req, res, {
     subject: "Failed Loging Attempt",

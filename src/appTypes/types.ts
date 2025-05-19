@@ -50,7 +50,10 @@ export interface mailSenderType {
         companyName: string, 
         userName: string,
         link?: string,
-        verificationCode?: number
+        verificationCode?: number,
+        attemptTime?: string,
+        ipAddress?: string,
+        location?: string
     }
 }
 
@@ -127,4 +130,13 @@ export interface UserInfo {
       os: string;
       device: string;
     };
-  }
+}
+  
+export interface IpAddressInfo { 
+    time: string,
+    ipAddress: string,
+    location: {
+        country: string,
+        regionName: string
+    }
+}

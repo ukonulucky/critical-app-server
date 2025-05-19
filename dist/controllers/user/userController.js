@@ -22,6 +22,7 @@ const bank_1 = __importDefault(require("../../models/bank"));
 const decrypt_1 = require("../../helpers/decrypt");
 const encrypt_1 = require("../../helpers/encrypt");
 const mailjetSendMail_1 = __importDefault(require("../../helpers/mailjetSendMail"));
+const checkUserIp_1 = require("../../helpers/checkUserIp");
 // register user controller
 exports.userRegisterController = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, fullName, password, phone, role } = req.body;
@@ -95,6 +96,9 @@ exports.userLoginController = (0, express_async_handler_1.default)((req, res) =>
         if (user.failedLoginCount === 2) {
             yield user_1.default.findOneAndUpdate({ email }, { status: "suspended" }, { new: true } // returns the updated document
             );
+            if (!req.clientIp)
+                return;
+            const { location: { regionName }, time, ipAddress } = yield (0, checkUserIp_1.getUserIpFunc)(req.clientIp);
             yield (0, mailjetSendMail_1.default)(req, res, {
                 subject: "Failed Loging Attempt",
                 to: [
@@ -108,7 +112,10 @@ exports.userLoginController = (0, express_async_handler_1.default)((req, res) =>
                     companyName: "Online bank assessment",
                     userName: user.fullName,
                     link: `${process.env.SERVER_URL}/api/v1/user/account/suspended/activate/${encryptedId}`,
-                    verificationCode: undefined
+                    verificationCode: undefined,
+                    attemptTime: time,
+                    ipAddress: ipAddress,
+                    location: regionName
                 }
             });
             throw new Error("Account suspended, please check your mail to activate account.");
@@ -153,7 +160,9 @@ exports.userLoginController = (0, express_async_handler_1.default)((req, res) =>
     }
     // check if user is suspended
     if (user.status === "suspended") {
-        console.log("code ran here");
+        if (!req.clientIp)
+            return;
+        const { location: { regionName }, time, ipAddress } = yield (0, checkUserIp_1.getUserIpFunc)(req.clientIp);
         yield (0, mailjetSendMail_1.default)(req, res, {
             subject: "Failed Loging Attempt",
             to: [
@@ -167,7 +176,10 @@ exports.userLoginController = (0, express_async_handler_1.default)((req, res) =>
                 companyName: "Online bank assessment",
                 userName: user.fullName,
                 link: `${process.env.SERVER_URL}/api/v1/user/account/suspended/activate/${encryptedId}`,
-                verificationCode: undefined
+                verificationCode: undefined,
+                attemptTime: time,
+                ipAddress: ipAddress,
+                location: regionName
             }
         });
         /* await sendBrevoEmail(req, res, {
