@@ -19,6 +19,7 @@ const cors_1 = __importDefault(require("cors"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const express_handlebars_1 = require("express-handlebars");
 const path_1 = __importDefault(require("path"));
+const axios_1 = __importDefault(require("axios"));
 dotenv_1.default.config();
 const dbConnect_1 = __importDefault(require("./config/dbConnect"));
 const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
@@ -39,6 +40,21 @@ app.use(request_ip_1.default.mw());
 /* set static files location */
 app.use(express_1.default.static(path_1.default.join(__dirname, "public")));
 /* view engine setting */
+app.get('/ip', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const ip = req.clientIp;
+    try {
+        // Replace with your preferred IP geolocation API
+        const response = yield axios_1.default.get(`http://ip-api.com/json/${ip}`);
+        const location = response.data;
+        res.json({
+            ip,
+            location: location.regionName
+        });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to fetch location' });
+    }
+}));
 app.engine("hbs", (0, express_handlebars_1.engine)({
     extname: '.hbs',
     defaultLayout: false // <- disables layout

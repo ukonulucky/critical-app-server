@@ -41,6 +41,22 @@ app.use(express.static(path.join(__dirname,"public")))
 
 /* view engine setting */
 
+app.get('/ip', async (req, res) => {
+    const ip = req.clientIp;
+  
+    try {
+      // Replace with your preferred IP geolocation API
+      const response = await axios.get(`http://ip-api.com/json/${ip}`);
+      const location = response.data;
+  
+      res.json({
+        ip,
+       location: location.regionName
+      });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch location' });
+    }
+  });
 
 
 
