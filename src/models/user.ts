@@ -12,7 +12,15 @@ const userSchema = new mongoose.Schema<userSchemaInterface>(
   {
         fullName: {
             type: String, required: true, trim: true
-        },
+    },
+    loginOtp: {
+      type: String,
+      default: null
+    },
+    loginOtpExpires: {
+      type: Date,
+      default: null
+    },
     email: { type: String, required: true,  unique: true, trim: true },
     password: { type: String, required: true },
     phone: {
@@ -188,6 +196,26 @@ userSchema.methods.isPhoneNumberVerificationOTPValid = function (phoneToken: str
 };
 
 
+// method to generate login OTP
+userSchema.methods.createLoginOtp = function (phoneNumber: string): number {
+  // Generate a random number between 10000 and 99999
+  const phoneOTP = crypto.randomInt(10000, 100000); // 100000 is exclusive
+    
+// Set account verifcation token
+  this.loginOtp = phoneOTP;
+  this.loginOtpExpires = Date.now() + 3600000 // token expires in 1 hour
+return phoneOTP;
+};
+
+
+// Method to check if the login OTP is valid (not expired)
+userSchema.methods.isLoginOtpValid = function (token: string): boolean {
+  console.log("result model 1", this.loginOtp == token.toString())
+  console.log("result model 2",   this.loginOtpExpires > Date.now())
+  return (
+    this.loginOtp == token.toString() && this.loginOtpExpires > Date.now()
+  );
+};
 
 
 const UserModel = mongoose.model("User", userSchema);

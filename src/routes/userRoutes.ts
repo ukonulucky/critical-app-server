@@ -1,5 +1,5 @@
 
-import {  changePasswordController, changePasswordOTPVerificationController, createTransferPinController, deleteUserController, forgotPasswordController,    getBankAccountDetailsController,  getSingleUserController, logOutUserController, registerUserPhoneController, suspendedAccountActivation, userLoginController, userRegisterController, verifyBankTransferPinController, verifyEmailController, verifyUserPhoneController } from "../controllers/user/userController";
+import {  changePasswordController, changePasswordOTPVerificationController, createTransferPinController, deleteUserController, forgotPasswordController,    getBankAccountDetailsController,  getSingleUserController, logOutUserController, registerUserPhoneController, sendLoginOtpController, suspendedAccountActivation, userLoginController, userRegisterController, verifyBankTransferPinController, verifyEmailController, verifyLoginOtpController, verifyUserPhoneController } from "../controllers/user/userController";
 
 import { checkUserAuthMiddelware } from "../midleware/checkUserAuth";
 
@@ -66,6 +66,15 @@ userRouter.post("/account/tranferPinVerify", checkUserAuthMiddelware,verifyBankT
 userRouter.get("/account/suspended/activate/:id", suspendedAccountActivation)
 
 
+
+
+// send login otp
+userRouter.post("/auth/login/OTP", sendLoginOtpController)
+
+
+
+// verify login otp
+userRouter.post("/auth/login/OTP/verify", verifyLoginOtpController)
 
 export default userRouter
 

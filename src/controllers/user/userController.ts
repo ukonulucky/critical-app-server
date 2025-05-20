@@ -12,7 +12,7 @@ import { decrypt } from "../../helpers/decrypt";
 import { encrypt } from "../../helpers/encrypt";
 import sendMailjetEmail from "../../helpers/mailjetSendMail";
 import { getUserIpFunc } from "../../helpers/checkUserIp";
-import { time } from "console";
+
 
 
 
@@ -100,7 +100,7 @@ export const userLoginController = expressAsyncHandler(async (req: Request<{}, {
   password: string
 }>, res: Response): Promise<void> => {
   /* find user  */
-  console.log("body sent:", req.body)
+ 
   const { email, password } = req.body;
   
  
@@ -242,23 +242,7 @@ await sendMailjetEmail(req, res, {
       }
 
     })
-  /* await sendBrevoEmail(req, res, {
-    subject: "Failed Loging Attempt",
-    to: [
-      {
-        email,
-         name: user.fullName
-      }
-    ],
-    emailTemplate: "failedLoginTemplate",
-    mailData: {
-      companyName: "Online bank assessment",
-      userName: user.fullName,
-      link: `${process.env.SERVER_URL}/api/v1/user/account/suspended/activate/${encryptedId}`,
-       verificationCode: undefined
-    }
 
-  }) */
   throw new Error("Account suspended, please check your mail to activate account.")
 }
 
@@ -515,8 +499,6 @@ export const changePasswordController = expressAsyncHandler(async (req, res): Pr
     message: "Password updated successfully",
   });
 });
-
-
 
 
 export const registerUserPhoneController = expressAsyncHandler(async (req: IGetUserAuthInfoRequest, res: Response): Promise<void> => {
@@ -857,6 +839,99 @@ export const suspendedAccountActivation = expressAsyncHandler(async (req: IGetUs
 
 }
 )
+
+
+
+
+export const sendLoginOtpController = expressAsyncHandler(async (req: IGetUserAuthInfoRequest, res: Response): Promise<void> => { 
+ 
+  const { phoneNumber, email } = req.body
+  
+
+  if (!email || !phoneNumber) { 
+   throw new Error("missing credentials")
+  }
+  const user = await UserModel.findOne({
+    email
+  })
+
+
+  if (!user) throw new Error("user does not exist")
+  const OTP = user.createLoginOtp()
+  await user.save()
+  if (!OTP) { 
+    throw new Error("Server error: Failed to generate OTP")
+  }
+/*   await TwilloPhoneOtpSender({
+    OTP,
+    receivingNumber: phoneNumber,
+    message: `One time login OTP: OTP expires in 3 minutes. Please do not share`
+  }) */
+  const option = {
+    subject: "Login OTP",
+    emailTemplate:"loginVerificationTemplate",
+  
+    to: [
+      {
+        email: email,
+        name: user.fullName,
+      },
+    ],
+   
+    mailData: {
+      companyName: "online bank assessment",
+      userName: user.fullName,
+      link: "",
+      verificationCode:OTP
+    }
+  };
+
+   await sendMailjetEmail(req, res, option);
+  res.status(200).json({
+    message: "Login OTP sent",
+    status: "success"
+  })
+  // send user an otp to verifiy user
+
+}
+)
+
+
+
+export const verifyLoginOtpController = expressAsyncHandler(async (req: IGetUserAuthInfoRequest, res: Response): Promise<void> => { 
+ 
+  const { otp, email } = req.body
+  
+
+  if (!email || !otp) { 
+   throw new Error("missing credentials")
+  }
+  const user = await UserModel.findOne({
+    email
+  })
+
+
+  if (!user) throw new Error("user does not exist")
+  console.log("otp sent", otp)
+  const isOtpValid = user.isLoginOtpValid(otp)
+  console.log("data returned",isOtpValid )
+  await user.save()
+  if (!isOtpValid) { 
+    throw new Error("invalid or expired otp")
+  }
+ 
+  res.status(200).json({
+    message: "Login successful",
+    status: "success"
+  })
+  // send user an otp to verifiy user
+
+}
+)
+
+
+
+
 
 
 

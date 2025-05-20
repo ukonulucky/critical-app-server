@@ -8,20 +8,22 @@ export interface userSchemaInterface extends Document {
     phone: string;
     email: string;
     url: string;
+    loginOtp: string | null,
+    loginOtpExpires: Date | null,
     isPhoneVerified: Boolean;
     passwordResetExpires: Date | null;
     passwordResetToken: string | null;
-    accountVerificationToken: String | null;
+    accountVerificationToken: string | null;
     isEmailVerified: Boolean;
     role: "user" | "admin";
     isDeleted: Boolean,
     failedLoginCount: Number; 
-    deviceType: String;
-    transferPin: String;
-    phoneVerificationCode: String;
-    isTransferPinVerified: String;
+    deviceType: string;
+    transferPin: string;
+    phoneVerificationCode: string;
+    isTransferPinVerified: string;
     isPasswordForgetOtpVerified: Boolean,
-    userIpAddress: String | null
+    userIpAddress: string | null
     status: "pending" | "approved" |"rejected" | "suspended";
     createEmailVerificationToken: () => string; 
     comparePassword: (candidatePassword: string) => boolean;
@@ -36,6 +38,8 @@ export interface userSchemaInterface extends Document {
         accountName?: string,
         userId?:string
     };    
+    createLoginOtp: () => number,
+    isLoginOtpValid: (otp: string) => boolean
 }
   
 
